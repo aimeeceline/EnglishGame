@@ -1,0 +1,35 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Phòng thi đấu đối kháng 1v1
+    match /rooms/{roomCode} {
+      // Cho phép mọi người đọc thông tin phòng (để tham gia bằng mã PIN)
+      allow read: if true;
+      
+      // Cho phép tạo và cập nhật trạng thái phòng (chọn đáp án, bấm sẵn sàng, bắt đầu)
+      allow create, update: if true;
+      
+      // Chỉ cho phép xóa khi kết thúc
+      allow delete: if false;
+    }
+
+    // Kho bộ từ vựng và thẻ Flashcard
+    match /decks/{deckId} {
+      allow read: if true;
+      allow write: if true;
+
+      match /cards/{cardId} {
+        allow read: if true;
+        allow write: if true;
+      }
+    }
+
+    // Bảng xếp hạng và hồ sơ người dùng
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if true;
+    }
+  }
+}
+

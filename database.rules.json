@@ -1,0 +1,17 @@
+{
+  "rules": {
+    "rooms": {
+      ".read": true,
+      ".write": true
+    },
+    "users": {
+      ".read": true,
+      ".write": true
+    },
+    "decks": {
+      ".read": true,
+      ".write": true
+    }
+  }
+}
+
