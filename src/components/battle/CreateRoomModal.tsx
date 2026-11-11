@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { X, Sparkles, FileSpreadsheet, Layers, Clock, Zap, Loader2 } from "lucide-react";
-import { DEFAULT_DECKS } from "@/lib/mockData";
+import { getAllDecks } from "@/lib/firebase/decks";
 import { createBattleRoom } from "@/lib/firebase/rooms";
 import { useUserIdentity } from "@/hooks/useUserIdentity";
 import { extractGoogleSheetInfo, getGoogleSheetCsvUrl, parseVocabCsv } from "@/lib/sheets/parser";
@@ -18,7 +18,8 @@ export default function CreateRoomModal({ isOpen, onClose }: CreateRoomModalProp
   const router = useRouter();
   const { user } = useUserIdentity();
 
-  const [selectedDeckId, setSelectedDeckId] = useState<string>(DEFAULT_DECKS[0].id);
+  const [decks, setDecks] = useState<VocabDeck[]>([]);
+  const [selectedDeckId, setSelectedDeckId] = useState<string>("");
   const [useGoogleSheet, setUseGoogleSheet] = useState(false);
   const [sheetUrl, setSheetUrl] = useState("");
   const [sheetError, setSheetError] = useState("");
@@ -29,13 +30,26 @@ export default function CreateRoomModal({ isOpen, onClose }: CreateRoomModalProp
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
   const [isCreating, setIsCreating] = useState(false);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    (async () => {
+      const allDecks = await getAllDecks();
+      setDecks(allDecks);
+      if (allDecks.length > 0) {
+        setSelectedDeckId(allDecks[0].id);
+      } else {
+        setUseGoogleSheet(true);
+      }
+    })();
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const handleCreate = async () => {
     setIsCreating(true);
     setSheetError("");
 
-    let deckTitle = DEFAULT_DECKS.find(d => d.id === selectedDeckId)?.title || "Bộ Từ Vựng";
+    let deckTitle = decks.find(d => d.id === selectedDeckId)?.title || "Bộ Từ Vựng";
     let finalDeckId = selectedDeckId;
 
     // Nếu chọn nguồn từ Google Sheet
@@ -169,25 +183,38 @@ export default function CreateRoomModal({ isOpen, onClose }: CreateRoomModalProp
         {/* Deck Content */}
         {!useGoogleSheet ? (
           <div className="space-y-2 mb-4 max-h-56 overflow-y-auto pr-1">
-            {DEFAULT_DECKS.map((deck) => (
-              <div
-                key={deck.id}
-                onClick={() => setSelectedDeckId(deck.id)}
-                className={`p-3 rounded-xl border cursor-pointer transition ${
-                  selectedDeckId === deck.id
-                    ? "border-blue-500 bg-blue-50/70 shadow-xs"
-                    : "border-slate-200 bg-white hover:border-slate-300"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold text-sm text-slate-900">{deck.title}</span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
-                    {deck.cards.length} từ
-                  </span>
-                </div>
-                <p className="text-xs text-slate-500 mt-1 line-clamp-1">{deck.description}</p>
+            {decks.length === 0 ? (
+              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-center text-xs text-slate-500">
+                <p className="mb-2">Chưa có bộ từ vựng nào trong kho.</p>
+                <button
+                  type="button"
+                  onClick={() => setUseGoogleSheet(true)}
+                  className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-bold text-xs"
+                >
+                  Dán Link Google Sheet Ngay
+                </button>
               </div>
-            ))}
+            ) : (
+              decks.map((deck) => (
+                <div
+                  key={deck.id}
+                  onClick={() => setSelectedDeckId(deck.id)}
+                  className={`p-3 rounded-xl border cursor-pointer transition ${
+                    selectedDeckId === deck.id
+                      ? "border-blue-500 bg-blue-50/70 shadow-xs"
+                      : "border-slate-200 bg-white hover:border-slate-300"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-sm text-slate-900">{deck.title}</span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
+                      {deck.cards.length} từ
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1 line-clamp-1">{deck.description}</p>
+                </div>
+              ))
+            )}
           </div>
         ) : (
           <div className="mb-4 space-y-2">

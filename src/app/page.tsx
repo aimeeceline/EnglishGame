@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Swords, KeyRound, BookOpen, Sparkles, FileSpreadsheet, Trophy, Users, Zap, ArrowRight, History, Flame } from "lucide-react";
+import { Swords, KeyRound, BookOpen, Sparkles, FileSpreadsheet, Trophy, Users, Zap, ArrowRight, History, Flame, Plus } from "lucide-react";
 import Navbar from "@/components/common/Navbar";
 import CreateRoomModal from "@/components/battle/CreateRoomModal";
 import JoinRoomModal from "@/components/battle/JoinRoomModal";
-import { DEFAULT_DECKS } from "@/lib/mockData";
+import { getAllDecks } from "@/lib/firebase/decks";
+import { VocabDeck } from "@/types/vocab";
 
 interface BattleHistoryItem {
   roomCode: string;
@@ -23,6 +24,7 @@ export default function HomePage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isJoinOpen, setIsJoinOpen] = useState(false);
   const [history, setHistory] = useState<BattleHistoryItem[]>([]);
+  const [decks, setDecks] = useState<VocabDeck[]>([]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -34,6 +36,11 @@ export default function HomePage() {
     } catch (e) {
       console.warn(e);
     }
+
+    (async () => {
+      const allDecks = await getAllDecks();
+      setDecks(allDecks);
+    })();
   }, []);
 
   return (
@@ -119,55 +126,81 @@ export default function HomePage() {
         <div className="mt-16 w-full text-left">
           <div className="flex items-center justify-between mb-5">
             <div>
-              <h2 className="text-xl font-bold text-slate-900">Kho Từ Vựng Sẵn Có</h2>
-              <p className="text-xs text-slate-500">Chọn nhanh bộ từ để học Flashcard hoặc thách đấu ngay</p>
+              <h2 className="text-xl font-bold text-slate-900">Kho Bộ Thẻ Từ Vựng</h2>
+              <p className="text-xs text-slate-500">Các bộ từ bạn đã thêm hoặc nhập từ Google Sheet</p>
             </div>
             <Link
               href="/decks"
               className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1"
             >
-              Xem tất cả <ArrowRight className="w-3.5 h-3.5" />
+              Quản lý kho thẻ <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {DEFAULT_DECKS.map((deck) => (
-              <div
-                key={deck.id}
-                className="p-5 rounded-2xl bg-white border border-slate-200 hover:border-blue-300 shadow-xs hover:shadow-md flex flex-col justify-between transition"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                      {deck.category}
-                    </span>
-                    <span className="text-xs text-slate-500 font-medium">
-                      {deck.cards.length} thẻ từ vựng
-                    </span>
-                  </div>
-                  <h3 className="font-bold text-lg text-slate-900">{deck.title}</h3>
-                  <p className="text-xs text-slate-500 mt-1 line-clamp-2">{deck.description}</p>
-                </div>
-
-                <div className="flex items-center gap-2 mt-5 pt-4 border-t border-slate-100">
-                  <button
-                    onClick={() => setIsCreateOpen(true)}
-                    className="flex-1 py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs flex items-center justify-center gap-1.5 shadow-xs transition"
-                  >
-                    <Swords className="w-3.5 h-3.5" />
-                    Đấu 1v1 Bộ Này
-                  </button>
-                  <Link
-                    href={`/decks/${deck.id}/study`}
-                    className="py-2 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-semibold text-xs flex items-center gap-1.5 transition"
-                  >
-                    <BookOpen className="w-3.5 h-3.5 text-emerald-600" />
-                    Luyện Thẻ
-                  </Link>
-                </div>
+          {decks.length === 0 ? (
+            <div className="p-8 rounded-2xl bg-white border border-slate-200 text-center shadow-xs">
+              <div className="w-12 h-12 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 mx-auto mb-3">
+                <FileSpreadsheet className="w-6 h-6" />
               </div>
-            ))}
-          </div>
+              <h3 className="font-bold text-slate-900 text-base mb-1">Chưa Có Bộ Từ Vựng Nào</h3>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto mb-4 leading-relaxed">
+                Dán link Google Sheet để hệ thống tự động nhận diện từ vựng, hoặc tạo bộ thẻ mới trong Kho Thẻ.
+              </p>
+              <div className="flex items-center justify-center gap-3">
+                <button
+                  onClick={() => setIsCreateOpen(true)}
+                  className="px-4 py-2 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-xs hover:bg-blue-500 transition"
+                >
+                  Đấu 1v1 Với Google Sheet
+                </button>
+                <Link
+                  href="/decks"
+                  className="px-4 py-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-xs hover:bg-emerald-100 transition"
+                >
+                  Vào Kho Bộ Thẻ
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {decks.slice(0, 4).map((deck) => (
+                <div
+                  key={deck.id}
+                  className="p-5 rounded-2xl bg-white border border-slate-200 hover:border-blue-300 shadow-xs hover:shadow-md flex flex-col justify-between transition"
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                        {deck.sourceType === "google_sheet" ? "Google Sheet" : deck.category}
+                      </span>
+                      <span className="text-xs text-slate-500 font-medium">
+                        {deck.cards.length} thẻ từ vựng
+                      </span>
+                    </div>
+                    <h3 className="font-bold text-lg text-slate-900">{deck.title}</h3>
+                    <p className="text-xs text-slate-500 mt-1 line-clamp-2">{deck.description}</p>
+                  </div>
+
+                  <div className="flex items-center gap-2 mt-5 pt-4 border-t border-slate-100">
+                    <button
+                      onClick={() => setIsCreateOpen(true)}
+                      className="flex-1 py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs flex items-center justify-center gap-1.5 shadow-xs transition"
+                    >
+                      <Swords className="w-3.5 h-3.5" />
+                      Đấu 1v1 Bộ Này
+                    </button>
+                    <Link
+                      href={`/decks/${deck.id}/study`}
+                      className="py-2 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-semibold text-xs flex items-center gap-1.5 transition"
+                    >
+                      <BookOpen className="w-3.5 h-3.5 text-emerald-600" />
+                      Luyện Thẻ
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Recent Battle History Section (If any) */}

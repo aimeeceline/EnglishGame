@@ -1,7 +1,6 @@
 import { ref, set, get, remove } from "firebase/database";
 import { rtdb } from "./config";
 import { VocabDeck, FlashcardItem } from "@/types/vocab";
-import { DEFAULT_DECKS } from "@/lib/mockData";
 
 /**
  * Lưu bộ thẻ từ vựng lên Firebase Realtime Database
@@ -21,15 +20,12 @@ export async function saveDeckToFirebase(deck: VocabDeck): Promise<void> {
 }
 
 /**
- * Lấy toàn bộ danh sách bộ thẻ từ Firebase Realtime Database kết hợp Default Decks
+ * Lấy toàn bộ danh sách bộ thẻ từ Firebase Realtime Database và LocalStorage
  */
 export async function getAllDecks(): Promise<VocabDeck[]> {
   const decksMap = new Map<string, VocabDeck>();
 
-  // 1. Nạp Default Decks
-  DEFAULT_DECKS.forEach(d => decksMap.set(d.id, d));
-
-  // 2. Nạp từ localStorage
+  // 1. Nạp từ localStorage
   if (typeof window !== "undefined") {
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
@@ -46,7 +42,7 @@ export async function getAllDecks(): Promise<VocabDeck[]> {
     }
   }
 
-  // 3. Nạp từ Firebase Realtime Database
+  // 2. Nạp từ Firebase Realtime Database
   try {
     const decksRef = ref(rtdb, "decks");
     const snap = await get(decksRef);
@@ -69,10 +65,6 @@ export async function getAllDecks(): Promise<VocabDeck[]> {
  * Lấy chi tiết 1 bộ thẻ theo ID
  */
 export async function getDeckById(deckId: string): Promise<VocabDeck | null> {
-  // Tìm trong default
-  const defaultDeck = DEFAULT_DECKS.find(d => d.id === deckId);
-  if (defaultDeck) return defaultDeck;
-
   // Tìm trong Firebase
   try {
     const deckRef = ref(rtdb, `decks/${deckId}`);

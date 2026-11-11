@@ -8,8 +8,9 @@ import {
 } from "firebase/database";
 import { rtdb } from "./config";
 import { BattleRoom, PlayerState, BattleQuestion, RoomSettings } from "@/types/battle";
+import { recordUserMatch } from "./leaderboard";
 
-// Bộ nhớ đệm cục bộ (Fallback Mock Memory Store) phục vụ khi ngoại tuyến
+// Bộ nhớ đệm cục bộ (In-Memory Fallback Store) phục vụ khi ngoại tuyến
 const localRoomsMemory = new Map<string, BattleRoom>();
 const localListeners = new Map<string, Set<(room: BattleRoom) => void>>();
 
@@ -377,6 +378,14 @@ export async function proceedToNextQuestion(roomCode: string) {
       room.winnerUid = room.guest.uid;
     } else {
       room.winnerUid = 'draw';
+    }
+
+    // Ghi nhận điểm số và thành tích thực tế vào Bảng Xếp Hạng
+    const isHostWin = room.winnerUid === room.host.uid;
+    const isGuestWin = room.guest ? room.winnerUid === room.guest.uid : false;
+    recordUserMatch(room.host.uid, room.host.displayName, isHostWin, hostScore).catch(console.warn);
+    if (room.guest) {
+      recordUserMatch(room.guest.uid, room.guest.displayName, isGuestWin, guestScore).catch(console.warn);
     }
 
     try {

@@ -10,7 +10,6 @@ import MatchResultModal from "@/components/battle/MatchResultModal";
 import { BattleRoom, BattleQuestion } from "@/types/battle";
 import { subscribeToRoom, startBattleWithQuestions } from "@/lib/firebase/rooms";
 import { useUserIdentity } from "@/hooks/useUserIdentity";
-import { DEFAULT_DECKS } from "@/lib/mockData";
 import { generateBattleQuestions } from "@/lib/ai/gemini";
 import { getDeckById, syncGoogleSheetDeck } from "@/lib/firebase/decks";
 import { FlashcardItem, VocabDeck } from "@/types/vocab";
@@ -58,7 +57,7 @@ export default function BattleRoomPage({
 
     let cardsPool: FlashcardItem[] = [];
 
-    // Tìm deck từ Firebase / Default Decks
+    // Tìm deck từ Firebase hoặc LocalStorage
     const liveDeck = await getDeckById(room.settings.deckId);
     if (liveDeck) {
       if (liveDeck.sourceType === "google_sheet" && liveDeck.googleSheetUrl) {
@@ -68,17 +67,12 @@ export default function BattleRoomPage({
       } else {
         cardsPool = liveDeck.cards;
       }
-    } else {
-      // Tìm trong DEFAULT_DECKS
-      const defaultDeck = DEFAULT_DECKS.find(d => d.id === room.settings.deckId);
-      if (defaultDeck) {
-        cardsPool = defaultDeck.cards;
-      }
     }
 
-    // Nếu vẫn chưa có thì lấy deck đầu tiên làm mẫu
     if (cardsPool.length === 0) {
-      cardsPool = DEFAULT_DECKS[0].cards;
+      alert("Không tìm thấy từ vựng trong bộ thẻ này để tạo câu hỏi! Vui lòng kiểm tra lại bộ thẻ hoặc cập nhật từ Google Sheet.");
+      setIsStarting(false);
+      return;
     }
 
     try {
