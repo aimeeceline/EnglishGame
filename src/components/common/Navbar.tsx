@@ -49,7 +49,7 @@ export default function Navbar() {
   const rankColor = userStats.wins >= 15 ? "text-amber-600" : userStats.wins >= 5 ? "text-slate-600" : "text-emerald-600";
 
   return (
-    <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200/80 transition-all">
+    <header className="sticky top-0 z-40 bg-emerald-50/90 backdrop-blur-md border-b border-emerald-200/80 transition-all">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           
@@ -71,35 +71,35 @@ export default function Navbar() {
           </Link>
 
           {/* Navigation Tabs (Center) */}
-          <nav className="hidden md:flex items-center p-1.5 bg-slate-100/80 rounded-2xl border border-slate-200/60 shadow-inner">
+          <nav className="hidden md:flex items-center p-1.5 bg-emerald-100/60 rounded-2xl border border-emerald-200/70 shadow-inner">
             <Link
               href="/"
               className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${
                 pathname === "/"
-                  ? "bg-white text-blue-600 shadow-xs border border-slate-200/50"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
+                  ? "bg-white text-emerald-700 shadow-xs border border-emerald-200/80"
+                  : "text-emerald-900/70 hover:text-emerald-950 hover:bg-white/60"
               }`}
             >
-              <Swords className={`w-4 h-4 ${pathname === "/" ? "text-blue-600" : "text-slate-400"}`} />
+              <Swords className={`w-4 h-4 ${pathname === "/" ? "text-emerald-600" : "text-emerald-700/60"}`} />
               Đấu Trường 1v1
             </Link>
             <Link
               href="/decks"
               className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl font-medium text-sm transition-all ${
                 pathname.startsWith("/decks")
-                  ? "bg-white text-emerald-600 shadow-xs border border-slate-200/50 font-bold"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
+                  ? "bg-white text-emerald-700 shadow-xs border border-emerald-200/80 font-bold"
+                  : "text-emerald-900/70 hover:text-emerald-950 hover:bg-white/60"
               }`}
             >
-              <Layers className={`w-4 h-4 ${pathname.startsWith("/decks") ? "text-emerald-600" : "text-slate-400"}`} />
+              <Layers className={`w-4 h-4 ${pathname.startsWith("/decks") ? "text-emerald-600" : "text-emerald-700/60"}`} />
               Flashcard
             </Link>
             <Link
               href="/leaderboard"
               className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl font-medium text-sm transition-all ${
                 pathname === "/leaderboard"
-                  ? "bg-white text-amber-600 shadow-xs border border-slate-200/50 font-bold"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
+                  ? "bg-white text-amber-600 shadow-xs border border-emerald-200/80 font-bold"
+                  : "text-emerald-900/70 hover:text-emerald-950 hover:bg-white/60"
               }`}
             >
               <Trophy className="w-4 h-4 text-amber-500" />
@@ -126,14 +126,14 @@ export default function Navbar() {
             {/* Audio sound toggle */}
             <button
               onClick={() => setSoundEnabled(!soundEnabled)}
-              className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200/60 flex items-center justify-center text-slate-600 transition-colors"
+              className="w-10 h-10 rounded-xl bg-white/80 hover:bg-white border border-emerald-200/70 flex items-center justify-center text-emerald-800 transition-colors shadow-xs"
               title={soundEnabled ? "Tắt âm thanh" : "Bật âm thanh"}
             >
-              {soundEnabled ? <Volume2 className="w-4 h-4 text-blue-600" /> : <VolumeX className="w-4 h-4 text-slate-400" />}
+              {soundEnabled ? <Volume2 className="w-4 h-4 text-emerald-600" /> : <VolumeX className="w-4 h-4 text-slate-400" />}
             </button>
 
             {/* Profile Pill */}
-            <div className="flex items-center gap-3 pl-2 pr-4 py-1.5 bg-white border border-slate-200 rounded-2xl shadow-xs hover:border-slate-300 transition-all">
+            <div className="flex items-center gap-3 pl-2 pr-4 py-1.5 bg-white/90 border border-emerald-200/80 rounded-2xl shadow-xs hover:border-emerald-300 transition-all">
               <div className="relative">
                 <div className={`w-9 h-9 rounded-xl bg-gradient-to-tr ${user.avatarColor || "from-blue-600 to-emerald-400"} flex items-center justify-center text-sm font-black text-white ring-2 ring-emerald-500/30`}>
                   {user.displayName.charAt(0).toUpperCase()}
