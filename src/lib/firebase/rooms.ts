@@ -505,12 +505,25 @@ export async function getActiveRoomStats(): Promise<{ activeRooms: number; onlin
     if (snap.exists()) {
       const allRooms = snap.val() as Record<string, BattleRoom>;
       let active = 0;
+      const activeUids = new Set<string>();
+      const now = Date.now();
+
       Object.values(allRooms).forEach(r => {
-        if (r && (r.status === 'waiting' || r.status === 'playing' || r.status === 'round_result')) {
+        if (!r) return;
+        // Chỉ tính phòng còn đang mở hoặc đang đấu trong 2 tiếng gần nhất
+        const isRecent = !r.createdAt || now - r.createdAt < 2 * 60 * 60 * 1000;
+        const isActiveStatus = r.status === 'waiting' || r.status === 'playing' || r.status === 'round_result';
+
+        if (isRecent && isActiveStatus) {
           active++;
+          if (r.host?.uid) activeUids.add(r.host.uid);
+          if (r.guest?.uid) activeUids.add(r.guest.uid);
         }
       });
-      return { activeRooms: active, onlineCount: Math.max(1, active * 2 + 1) };
+
+      // Số người online là số lượng tài khoản duy nhất đang tham gia các phòng đang mở (ít nhất là 1)
+      const count = Math.max(1, activeUids.size);
+      return { activeRooms: active, onlineCount: count };
     }
   } catch (e) {
     console.warn("Lỗi lấy thống kê phòng:", e);
