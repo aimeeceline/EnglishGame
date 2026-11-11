@@ -12,9 +12,10 @@ import { VocabDeck } from "@/types/vocab";
 interface CreateRoomModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialDeckId?: string;
 }
 
-export default function CreateRoomModal({ isOpen, onClose }: CreateRoomModalProps) {
+export default function CreateRoomModal({ isOpen, onClose, initialDeckId }: CreateRoomModalProps) {
   const router = useRouter();
   const { user } = useUserIdentity();
 
@@ -35,13 +36,17 @@ export default function CreateRoomModal({ isOpen, onClose }: CreateRoomModalProp
     (async () => {
       const allDecks = await getAllDecks();
       setDecks(allDecks);
-      if (allDecks.length > 0) {
+      if (initialDeckId && allDecks.some(d => d.id === initialDeckId)) {
+        setSelectedDeckId(initialDeckId);
+        setUseGoogleSheet(false);
+      } else if (allDecks.length > 0) {
         setSelectedDeckId(allDecks[0].id);
+        setUseGoogleSheet(false);
       } else {
         setUseGoogleSheet(true);
       }
     })();
-  }, [isOpen]);
+  }, [isOpen, initialDeckId]);
 
   if (!isOpen) return null;
 

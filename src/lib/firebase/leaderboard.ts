@@ -182,3 +182,4 @@ export async function getRealLeaderboard(): Promise<LeaderboardUser[]> {
     rank: idx + 1,
   }));
 }
+

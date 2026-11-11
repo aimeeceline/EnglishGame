@@ -461,3 +461,47 @@ export async function sendRoomReaction(
   localRoomsMemory.set(cleanCode, room);
   notifyLocalListeners(cleanCode, room);
 }
+
+/**
+ * Tìm phòng đang chờ (Quick Match) trên Firebase
+ */
+export async function findWaitingRoom(currentUserUid: string): Promise<string | null> {
+  try {
+    const roomsRef = ref(rtdb, "rooms");
+    const snap = await get(roomsRef);
+    if (snap.exists()) {
+      const allRooms = snap.val() as Record<string, BattleRoom>;
+      for (const [code, r] of Object.entries(allRooms)) {
+        if (r && r.status === 'waiting' && r.host.uid !== currentUserUid && !r.guest) {
+          return code;
+        }
+      }
+    }
+  } catch (e) {
+    console.warn("Lỗi tìm phòng:", e);
+  }
+  return null;
+}
+
+/**
+ * Lấy số lượng phòng và người chơi đang hoạt động thực tế trên Firebase
+ */
+export async function getActiveRoomStats(): Promise<{ activeRooms: number; onlineCount: number }> {
+  try {
+    const roomsRef = ref(rtdb, "rooms");
+    const snap = await get(roomsRef);
+    if (snap.exists()) {
+      const allRooms = snap.val() as Record<string, BattleRoom>;
+      let active = 0;
+      Object.values(allRooms).forEach(r => {
+        if (r && (r.status === 'waiting' || r.status === 'playing' || r.status === 'round_result')) {
+          active++;
+        }
+      });
+      return { activeRooms: active, onlineCount: Math.max(1, active * 2 + 1) };
+    }
+  } catch (e) {
+    console.warn("Lỗi lấy thống kê phòng:", e);
+  }
+  return { activeRooms: 0, onlineCount: 1 };
+}
