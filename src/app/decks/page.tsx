@@ -103,9 +103,6 @@ export default function DecksPage() {
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900">
               Kho Bộ Thẻ Từ Vựng
             </h1>
-            <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium">
-              Học Flashcard 3D có phát âm hoặc chọn bộ từ để thách đấu 1v1
-            </p>
           </div>
 
           <div className="flex items-center gap-2.5">
@@ -223,9 +220,6 @@ export default function DecksPage() {
               <FileSpreadsheet className="w-5 h-5 text-emerald-600" />
               Nhập Từ Vựng Từ Google Sheet
             </h2>
-            <p className="text-xs text-slate-500 mb-5">
-              Dán đường link bảng tính Google Sheet để tự động chuyển thành bộ Flashcard và đề thi đấu AI.
-            </p>
 
             <form onSubmit={handleImportSheet} className="space-y-4">
               <div>

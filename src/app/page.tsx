@@ -130,7 +130,7 @@ export default function HomePage() {
           {
             deckId: decks[0].id,
             deckTitle: decks[0].title,
-            totalQuestions: 5,
+            totalQuestions: 10,
             timePerQuestion: 15,
             difficulty: "medium",
           }
@@ -273,25 +273,7 @@ export default function HomePage() {
 
               </div>
 
-              {/* Quick Match option */}
-              <div className="mt-6 flex items-center justify-center gap-2 text-xs text-slate-400">
-                <span>Hoặc muốn tìm đối thủ ngẫu nhiên?</span>
-                <button
-                  onClick={handleQuickMatch}
-                  disabled={isQuickMatching}
-                  className="text-teal-400 hover:text-teal-300 font-bold underline underline-offset-4 flex items-center gap-1 cursor-pointer disabled:opacity-50"
-                >
-                  {isQuickMatching ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" /> Đang tìm đối thủ...
-                    </>
-                  ) : (
-                    <>
-                      <Zap className="w-3.5 h-3.5" /> Tìm trận nhanh ngay
-                    </>
-                  )}
-                </button>
-              </div>
+              
 
             </div>
           </div>
@@ -365,7 +347,6 @@ export default function HomePage() {
                   {decks.length} Bộ Thẻ
                 </span>
               </div>
-              <p className="text-sm text-slate-500 mt-0.5">Các bộ từ bạn đã thêm hoặc nhập trực tiếp từ Google Sheet</p>
             </div>
             
             <div className="flex items-center gap-3">
@@ -477,128 +458,7 @@ export default function HomePage() {
           )}
         </section>
 
-        {/* LIVE ARENA PREVIEW / DEMO ARENA (Mô phỏng Giao diện Đấu Trực Tiếp 1v1) */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="bg-white rounded-3xl border border-slate-200/80 p-6 md:p-8 shadow-xl">
-            <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 rounded-full bg-red-500 animate-ping"></div>
-                <h3 className="text-lg font-black text-slate-900">Mô phỏng Giao diện Đấu Trực Tiếp 1v1</h3>
-              </div>
-              <span className="text-xs font-extrabold text-slate-400 uppercase tracking-widest">Xem trước Demo</span>
-            </div>
-
-            {/* Simulation Board */}
-            <div className="bg-slate-900 rounded-2xl p-6 text-white relative overflow-hidden">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-                
-                {/* Player 1 (You - Real User Info) */}
-                <div className="bg-slate-800/80 border border-emerald-500/50 p-4 rounded-xl flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-tr ${user.avatarColor || "from-blue-600 to-emerald-400"} flex items-center justify-center text-lg font-black text-white ring-2 ring-emerald-400`}>
-                      {user.displayName.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <p className="font-extrabold text-sm text-white">Bạn ({user.displayName})</p>
-                      <p className="text-xs text-emerald-400 font-semibold">Đã chọn phương án {simulatedAnswer} ✓</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-2xl font-black text-emerald-400">1,450</span>
-                    <p className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Điểm số</p>
-                  </div>
-                </div>
-
-                {/* VS Badge */}
-                <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-gradient-to-tr from-amber-500 to-red-500 font-black text-xs items-center justify-center border-2 border-slate-900 z-10 shadow-lg">
-                  VS
-                </div>
-
-                {/* Player 2 (Opponent) */}
-                <div className="bg-slate-800/80 border border-slate-700 p-4 rounded-xl flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-lg font-black text-white ring-2 ring-blue-400">
-                      M
-                    </div>
-                    <div>
-                      <p className="font-extrabold text-sm text-white">Đối Thủ</p>
-                      <p className="text-xs text-amber-400 font-semibold flex items-center gap-1">
-                        Đang suy nghĩ... <Loader2 className="w-3 h-3 animate-spin inline" />
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-2xl font-black text-blue-400">1,200</span>
-                    <p className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Điểm số</p>
-                  </div>
-                </div>
-
-              </div>
-
-              {/* Question Preview Area */}
-              <div className="mt-6 bg-slate-950/60 p-6 rounded-xl border border-slate-800 text-center">
-                <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Câu hỏi thử nghiệm 4/10</span>
-                <h4 className="text-xl font-black text-white mt-2 mb-4">
-                  "The new software update aims to _______ overall system performance."
-                </h4>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl mx-auto">
-                  <button
-                    type="button"
-                    onClick={() => setSimulatedAnswer("A")}
-                    className={`p-3 rounded-xl text-left text-sm font-bold flex items-center justify-between cursor-pointer transition border ${
-                      simulatedAnswer === "A"
-                        ? "bg-emerald-600/30 border-emerald-500 text-emerald-200"
-                        : "bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700"
-                    }`}
-                  >
-                    <span>A. enhance</span>
-                    {simulatedAnswer === "A" && <Check className="w-4 h-4 text-emerald-400" />}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setSimulatedAnswer("B")}
-                    className={`p-3 rounded-xl text-left text-sm font-bold flex items-center justify-between cursor-pointer transition border ${
-                      simulatedAnswer === "B"
-                        ? "bg-emerald-600/30 border-emerald-500 text-emerald-200"
-                        : "bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700"
-                    }`}
-                  >
-                    <span>B. decrease</span>
-                    {simulatedAnswer === "B" && <Check className="w-4 h-4 text-emerald-400" />}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setSimulatedAnswer("C")}
-                    className={`p-3 rounded-xl text-left text-sm font-bold flex items-center justify-between cursor-pointer transition border ${
-                      simulatedAnswer === "C"
-                        ? "bg-emerald-600/30 border-emerald-500 text-emerald-200"
-                        : "bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700"
-                    }`}
-                  >
-                    <span>C. abandon</span>
-                    {simulatedAnswer === "C" && <Check className="w-4 h-4 text-emerald-400" />}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setSimulatedAnswer("D")}
-                    className={`p-3 rounded-xl text-left text-sm font-bold flex items-center justify-between cursor-pointer transition border ${
-                      simulatedAnswer === "D"
-                        ? "bg-emerald-600/30 border-emerald-500 text-emerald-200"
-                        : "bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700"
-                    }`}
-                  >
-                    <span>D. reject</span>
-                    {simulatedAnswer === "D" && <Check className="w-4 h-4 text-emerald-400" />}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+       
 
         {/* Recent Battle History Section (If any real matches exist) */}
         {history.length > 0 && (

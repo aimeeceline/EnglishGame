@@ -26,7 +26,7 @@ export default function CreateRoomModal({ isOpen, onClose, initialDeckId }: Crea
   const [sheetError, setSheetError] = useState("");
   const [isFetchingSheet, setIsFetchingSheet] = useState(false);
 
-  const [totalQuestions, setTotalQuestions] = useState<number>(5);
+  const [totalQuestions, setTotalQuestions] = useState<number>(10);
   const [timePerQuestion, setTimePerQuestion] = useState<number>(15);
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
   const [isCreating, setIsCreating] = useState(false);
@@ -148,7 +148,6 @@ export default function CreateRoomModal({ isOpen, onClose, initialDeckId }: Crea
           </div>
           <div>
             <h2 className="text-xl font-bold text-slate-900">Tạo Phòng Đấu 1v1</h2>
-            <p className="text-xs text-slate-500">Chọn cấu hình trận đấu và mời bạn bè cùng so tài</p>
           </div>
         </div>
 
@@ -234,9 +233,6 @@ export default function CreateRoomModal({ isOpen, onClose, initialDeckId }: Crea
                 placeholder="https://docs.google.com/spreadsheets/d/1BxiMVs0X.../edit"
                 className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-500"
               />
-              <p className="text-[11px] text-slate-500 mt-1.5">
-                💡 Cần mở Sheet $\to$ <span className="text-emerald-600 font-semibold">Chia sẻ</span> $\to$ Chọn <span className="text-slate-700 font-medium">"Bất kỳ ai có đường liên kết đều có thể xem"</span>.
-              </p>
             </div>
             {sheetError && (
               <p className="text-xs text-rose-600 bg-rose-50 border border-rose-200 p-2 rounded-lg">
@@ -254,7 +250,7 @@ export default function CreateRoomModal({ isOpen, onClose, initialDeckId }: Crea
               Số Lượng Câu Hỏi
             </label>
             <div className="grid grid-cols-3 gap-1.5">
-              {[5, 10, 15].map((count) => (
+              {[10, 20, 30].map((count) => (
                 <button
                   key={count}
                   type="button"

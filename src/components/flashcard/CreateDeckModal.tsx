@@ -68,7 +68,6 @@ export default function CreateDeckModal({
           </div>
           <div>
             <h2 className="text-xl font-bold text-slate-900">Tạo Bộ Thẻ Mới</h2>
-            <p className="text-xs text-slate-500">Tự soạn danh sách từ vựng theo ý muốn</p>
           </div>
         </div>
 
