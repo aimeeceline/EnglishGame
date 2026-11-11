@@ -84,7 +84,7 @@ export default function LeaderboardPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
+    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800">
       <Navbar />
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 w-full flex-1">
@@ -94,25 +94,25 @@ export default function LeaderboardPage() {
           <div>
             <Link
               href="/"
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-white transition mb-2"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-blue-600 transition mb-2"
             >
               <ArrowLeft className="w-4 h-4" />
               Quay lại Sảnh Đấu
             </Link>
             <div className="flex items-center gap-2">
-              <Trophy className="w-7 h-7 text-amber-400" />
-              <h1 className="text-2xl sm:text-3xl font-black text-white">
+              <Trophy className="w-7 h-7 text-amber-500" />
+              <h1 className="text-2xl sm:text-3xl font-black text-slate-900">
                 Bảng Xếp Hạng Cao Thủ 1v1
               </h1>
             </div>
-            <p className="text-xs sm:text-sm text-slate-400 mt-1">
+            <p className="text-xs sm:text-sm text-slate-500 mt-1">
               Top người chơi có chuỗi thắng và tổng điểm đối kháng cao nhất
             </p>
           </div>
 
           <button
             onClick={() => setIsCreateOpen(true)}
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-indigo-600/30 transition self-start sm:self-auto"
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-blue-600 via-sky-600 to-emerald-600 hover:opacity-95 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-600/20 transition active:scale-95 self-start sm:self-auto"
           >
             <Swords className="w-4 h-4" />
             Tạo Phòng Leo Rank
@@ -128,43 +128,43 @@ export default function LeaderboardPage() {
             return (
               <div
                 key={user.rank}
-                className={`p-6 rounded-3xl border-2 flex flex-col items-center text-center relative shadow-xl transition ${
+                className={`p-6 rounded-3xl border-2 flex flex-col items-center text-center relative shadow-xs transition ${
                   isFirst
-                    ? "bg-slate-900/90 border-amber-500/80 shadow-amber-500/10 md:-translate-y-2"
+                    ? "bg-white border-amber-400 shadow-md md:-translate-y-2"
                     : isSecond
-                      ? "bg-slate-900/80 border-slate-400/60"
-                      : "bg-slate-900/80 border-amber-700/60"
+                      ? "bg-white border-slate-300"
+                      : "bg-white border-amber-200"
                 }`}
               >
                 {/* Crown badge */}
-                <div className={`absolute -top-3.5 px-3 py-0.5 rounded-full text-[10px] font-black uppercase flex items-center gap-1 shadow ${
+                <div className={`absolute -top-3.5 px-3 py-0.5 rounded-full text-[10px] font-black uppercase flex items-center gap-1 shadow-sm ${
                   isFirst
-                    ? "bg-amber-500 text-slate-950 font-black"
+                    ? "bg-amber-400 text-amber-950 font-black"
                     : isSecond
-                      ? "bg-slate-300 text-slate-950 font-bold"
-                      : "bg-amber-700 text-white font-bold"
+                      ? "bg-slate-200 text-slate-800 font-bold"
+                      : "bg-amber-100 text-amber-900 font-bold border border-amber-300"
                 }`}>
-                  {isFirst && <Crown className="w-3 h-3 fill-slate-950" />}
+                  {isFirst && <Crown className="w-3 h-3 fill-amber-950" />}
                   Top {user.rank}
                 </div>
 
-                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-tr ${user.avatarColor} flex items-center justify-center text-2xl font-black text-white shadow-lg my-2`}>
+                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-tr ${user.avatarColor} flex items-center justify-center text-2xl font-black text-white shadow-md my-2`}>
                   {user.displayName.charAt(0)}
                 </div>
 
-                <h3 className="font-bold text-base text-white mt-1">{user.displayName}</h3>
+                <h3 className="font-bold text-base text-slate-900 mt-1">{user.displayName}</h3>
                 
-                <div className="text-2xl font-black text-indigo-400 font-mono my-1.5">
+                <div className="text-2xl font-black text-blue-600 font-mono my-1.5">
                   {user.score.toLocaleString()} <span className="text-xs text-slate-400 font-sans">XP</span>
                 </div>
 
-                <div className="flex items-center gap-3 text-xs text-slate-400 mt-2 pt-3 border-t border-slate-800 w-full justify-center">
-                  <span className="flex items-center gap-1 text-emerald-400 font-semibold">
+                <div className="flex items-center gap-3 text-xs text-slate-500 mt-2 pt-3 border-t border-slate-100 w-full justify-center">
+                  <span className="flex items-center gap-1 text-emerald-600 font-semibold">
                     <Trophy className="w-3.5 h-3.5" /> {user.totalWins} thắng
                   </span>
                   <span>•</span>
-                  <span className="flex items-center gap-1 text-amber-400 font-semibold">
-                    <Flame className="w-3.5 h-3.5 fill-amber-400" /> Chuỗi {user.streak}
+                  <span className="flex items-center gap-1 text-amber-600 font-semibold">
+                    <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" /> Chuỗi {user.streak}
                   </span>
                 </div>
               </div>
@@ -173,47 +173,47 @@ export default function LeaderboardPage() {
         </div>
 
         {/* Full Ranking Table */}
-        <div className="bg-slate-900/70 border border-slate-800 rounded-3xl overflow-hidden shadow-xl">
-          <div className="p-4 border-b border-slate-800 bg-slate-900/90 font-bold text-xs uppercase tracking-wider text-slate-400">
+        <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-xs">
+          <div className="p-4 border-b border-slate-200 bg-slate-50 font-bold text-xs uppercase tracking-wider text-slate-500">
             Chi Tiết Bảng Điểm Cao Thủ
           </div>
 
-          <div className="divide-y divide-slate-800/80">
+          <div className="divide-y divide-slate-100">
             {MOCK_LEADERBOARD.map((user) => (
               <div
                 key={user.rank}
-                className="p-4 flex items-center justify-between hover:bg-slate-800/40 transition gap-4"
+                className="p-4 flex items-center justify-between hover:bg-slate-50/80 transition gap-4"
               >
                 {/* Rank & User */}
                 <div className="flex items-center gap-3 min-w-0">
                   <span className={`w-7 text-center font-black font-mono text-sm ${
-                    user.rank === 1 ? "text-amber-400 text-base" : user.rank === 2 ? "text-slate-300" : user.rank === 3 ? "text-amber-600" : "text-slate-500"
+                    user.rank === 1 ? "text-amber-500 text-base" : user.rank === 2 ? "text-slate-500" : user.rank === 3 ? "text-amber-600" : "text-slate-400"
                   }`}>
                     #{user.rank}
                   </span>
 
-                  <div className={`w-9 h-9 rounded-xl bg-gradient-to-tr ${user.avatarColor} flex items-center justify-center font-bold text-sm text-white shrink-0`}>
+                  <div className={`w-9 h-9 rounded-xl bg-gradient-to-tr ${user.avatarColor} flex items-center justify-center font-bold text-sm text-white shrink-0 shadow-xs`}>
                     {user.displayName.charAt(0)}
                   </div>
 
                   <div className="min-w-0">
-                    <span className="font-bold text-sm text-white truncate block">
+                    <span className="font-bold text-sm text-slate-900 truncate block">
                       {user.displayName}
                     </span>
-                    <span className="text-[11px] text-slate-400">
-                      Tỉ lệ thắng: <strong className="text-emerald-400">{user.winRate}%</strong> ({user.totalWins}/{user.totalMatches})
+                    <span className="text-[11px] text-slate-500">
+                      Tỉ lệ thắng: <strong className="text-emerald-600">{user.winRate}%</strong> ({user.totalWins}/{user.totalMatches})
                     </span>
                   </div>
                 </div>
 
                 {/* Score & Streak */}
                 <div className="text-right shrink-0">
-                  <div className="font-black text-indigo-400 font-mono text-sm sm:text-base">
+                  <div className="font-black text-blue-600 font-mono text-sm sm:text-base">
                     {user.score.toLocaleString()} XP
                   </div>
                   {user.streak > 1 && (
-                    <div className="text-[11px] text-amber-400 font-semibold flex items-center justify-end gap-0.5">
-                      <Flame className="w-3 h-3 fill-amber-400" />
+                    <div className="text-[11px] text-amber-600 font-semibold flex items-center justify-end gap-0.5">
+                      <Flame className="w-3 h-3 fill-amber-500 text-amber-500" />
                       Chuỗi x{user.streak}
                     </div>
                   )}

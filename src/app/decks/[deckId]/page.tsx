@@ -101,9 +101,9 @@ export default function DeckDetailPage({
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
+      <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800">
         <Navbar />
-        <div className="flex-1 flex items-center justify-center p-6 text-slate-400 text-sm font-semibold">
+        <div className="flex-1 flex items-center justify-center p-6 text-slate-500 text-sm font-semibold">
           Đang tải thông tin bộ thẻ...
         </div>
       </div>
@@ -112,15 +112,15 @@ export default function DeckDetailPage({
 
   if (!deck) {
     return (
-      <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
+      <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800">
         <Navbar />
         <div className="flex-1 flex flex-col items-center justify-center p-6">
-          <p className="text-sm font-semibold text-slate-400 mb-4">
+          <p className="text-sm font-semibold text-slate-500 mb-4">
             Không tìm thấy bộ từ vựng này.
           </p>
           <Link
             href="/decks"
-            className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold"
+            className="px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold shadow-md shadow-blue-600/20"
           >
             Quay lại Kho Thẻ
           </Link>
@@ -130,7 +130,7 @@ export default function DeckDetailPage({
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
+    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800">
       <Navbar />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 w-full flex-1">
@@ -138,30 +138,30 @@ export default function DeckDetailPage({
         {/* Top Back Navigation */}
         <Link
           href="/decks"
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-white transition mb-6"
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-blue-600 transition mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
           Quay lại Kho Thẻ
         </Link>
 
         {/* Deck Header Banner */}
-        <div className="p-6 sm:p-8 rounded-3xl bg-slate-900/90 border border-slate-800 shadow-2xl mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+        <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200/90 shadow-sm mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div>
             <div className="flex items-center gap-2 mb-2">
               <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border ${
                 deck.sourceType === "google_sheet"
-                  ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
-                  : "bg-indigo-500/10 text-indigo-400 border-indigo-500/30"
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                  : "bg-blue-50 text-blue-700 border-blue-200"
               }`}>
                 {deck.sourceType === "google_sheet" ? "Google Sheet" : deck.category}
               </span>
-              <span className="text-xs font-bold text-slate-400">
+              <span className="text-xs font-bold text-slate-500">
                 {deck.cards.length} thẻ từ vựng
               </span>
             </div>
 
-            <h1 className="text-2xl sm:text-4xl font-black text-white">{deck.title}</h1>
-            <p className="text-xs sm:text-sm text-slate-400 mt-2 max-w-xl leading-relaxed">
+            <h1 className="text-2xl sm:text-4xl font-black text-slate-900">{deck.title}</h1>
+            <p className="text-xs sm:text-sm text-slate-600 mt-2 max-w-xl leading-relaxed">
               {deck.description}
             </p>
           </div>
@@ -170,7 +170,7 @@ export default function DeckDetailPage({
           <div className="flex flex-wrap sm:flex-col gap-2.5 shrink-0">
             <Link
               href={`/decks/${deck.id}/study`}
-              className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 transition"
+              className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 transition active:scale-95"
             >
               <BookOpen className="w-4 h-4" />
               Luyện Thẻ 3D Flashcard
@@ -178,7 +178,7 @@ export default function DeckDetailPage({
 
             <button
               onClick={() => setIsBattleOpen(true)}
-              className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 transition"
+              className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-blue-600/20 transition active:scale-95"
             >
               <Swords className="w-4 h-4" />
               Đấu 1v1 Bộ Này
@@ -186,9 +186,9 @@ export default function DeckDetailPage({
 
             <button
               onClick={() => setIsAddCardOpen(true)}
-              className="py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs flex items-center justify-center gap-2 border border-slate-700 transition"
+              className="py-2.5 px-4 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center justify-center gap-2 border border-slate-200 shadow-xs transition"
             >
-              <Plus className="w-4 h-4 text-emerald-400" />
+              <Plus className="w-4 h-4 text-emerald-600" />
               Thêm Từ Vựng Mới
             </button>
 
@@ -196,7 +196,7 @@ export default function DeckDetailPage({
               <button
                 onClick={handleManualSync}
                 disabled={isSyncing}
-                className="py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-400 font-bold text-xs flex items-center justify-center gap-2 border border-emerald-900/50 transition disabled:opacity-50"
+                className="py-2.5 px-4 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-xs flex items-center justify-center gap-2 border border-emerald-200 transition disabled:opacity-50"
               >
                 <RefreshCw className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`} />
                 {isSyncing ? "Đang Cập Nhật..." : "Cập Nhật Từ Sheet"}
@@ -206,7 +206,7 @@ export default function DeckDetailPage({
             {!deck.isDefault && (
               <button
                 onClick={handleDeleteEntireDeck}
-                className="py-2 px-3 text-slate-500 hover:text-rose-400 text-xs font-semibold flex items-center justify-center gap-1 transition"
+                className="py-2 px-3 text-slate-400 hover:text-rose-600 text-xs font-semibold flex items-center justify-center gap-1 transition"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 Xóa Bộ Thẻ Này
@@ -218,20 +218,20 @@ export default function DeckDetailPage({
         {/* Word Cards List */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <Layers className="w-4 h-4 text-indigo-400" />
+            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <Layers className="w-4 h-4 text-blue-600" />
               Danh Sách Từ Vựng ({deck.cards.length})
             </h2>
           </div>
 
           {deck.cards.length === 0 ? (
-            <div className="p-12 text-center bg-slate-900/40 border border-dashed border-slate-800 rounded-3xl">
-              <p className="text-slate-400 text-sm font-semibold mb-3">
+            <div className="p-12 text-center bg-white border-2 border-dashed border-slate-200 rounded-3xl shadow-xs">
+              <p className="text-slate-500 text-sm font-semibold mb-3">
                 Bộ thẻ này chưa có từ vựng nào!
               </p>
               <button
                 onClick={() => setIsAddCardOpen(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold shadow-md shadow-blue-600/20"
               >
                 <Plus className="w-4 h-4" />
                 Thêm Từ Vựng Đầu Tiên
@@ -242,21 +242,21 @@ export default function DeckDetailPage({
               {deck.cards.map((card, idx) => (
                 <div
                   key={card.id || idx}
-                  className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-slate-700 transition flex flex-col justify-between"
+                  className="p-5 rounded-2xl bg-white border border-slate-200/90 hover:border-blue-200 shadow-xs hover:shadow-md transition flex flex-col justify-between"
                 >
                   <div>
                     {/* Header: Word, POS, Audio, Delete */}
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-lg font-black text-white">{card.word}</span>
+                        <span className="text-lg font-black text-slate-900">{card.word}</span>
                         {card.partOfSpeech && (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200">
                             {card.partOfSpeech}
                           </span>
                         )}
                         <button
                           onClick={() => handleSpeak(card.word)}
-                          className="p-1 text-slate-400 hover:text-indigo-400 transition"
+                          className="p-1 text-slate-400 hover:text-blue-600 transition"
                           title="Nghe phát âm"
                         >
                           <Volume2 className="w-4 h-4" />
@@ -266,7 +266,7 @@ export default function DeckDetailPage({
                       {!deck.isDefault && (
                         <button
                           onClick={() => handleDeleteCard(card.id)}
-                          className="p-1 text-slate-500 hover:text-rose-400 transition"
+                          className="p-1 text-slate-400 hover:text-rose-500 transition"
                           title="Xóa từ này"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -276,20 +276,20 @@ export default function DeckDetailPage({
 
                     {/* Phonetic */}
                     {card.phonetic && (
-                      <p className="text-xs font-mono text-indigo-400 mb-2">{card.phonetic}</p>
+                      <p className="text-xs font-mono text-blue-600 font-semibold mb-2">{card.phonetic}</p>
                     )}
 
                     {/* Meaning */}
-                    <p className="text-sm font-bold text-slate-200 mb-2">
+                    <p className="text-sm font-bold text-slate-800 mb-2">
                       👉 {card.meaning}
                     </p>
 
                     {/* Example */}
                     {card.exampleSentence && (
-                      <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800/80 text-xs text-slate-300 space-y-0.5">
-                        <p className="font-medium text-slate-200">"{card.exampleSentence}"</p>
+                      <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 space-y-0.5">
+                        <p className="font-medium text-slate-800">"{card.exampleSentence}"</p>
                         {card.exampleTranslation && (
-                          <p className="text-slate-400 italic">$\rightarrow$ {card.exampleTranslation}</p>
+                          <p className="text-slate-500 italic">→ {card.exampleTranslation}</p>
                         )}
                       </div>
                     )}

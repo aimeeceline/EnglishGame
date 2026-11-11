@@ -57,35 +57,35 @@ export default function QuickReactionToolbar({
       
       {/* Floating Reaction Bubble */}
       {activeBubble && (
-        <div className={`mb-3 py-2 px-4 rounded-2xl border shadow-2xl flex items-center gap-2 animate-in fade-in zoom-in slide-in-from-bottom-2 duration-300 ${
+        <div className={`mb-3 py-2 px-4 rounded-2xl border-2 shadow-lg flex items-center gap-2.5 animate-in fade-in zoom-in slide-in-from-bottom-2 duration-300 ${
           activeBubble.isMe
-            ? "bg-indigo-950/90 border-indigo-500 text-indigo-200"
-            : "bg-pink-950/90 border-pink-500 text-pink-200"
+            ? "bg-white border-blue-500 text-slate-800 shadow-blue-500/10"
+            : "bg-white border-emerald-500 text-slate-800 shadow-emerald-500/10"
         }`}>
           <span className="text-2xl animate-bounce">{activeBubble.emoji}</span>
           <div className="text-xs">
-            <span className="font-extrabold block">
+            <span className={`font-black block ${activeBubble.isMe ? "text-blue-600" : "text-emerald-600"}`}>
               {activeBubble.isMe ? "Bạn" : activeBubble.senderName}:
             </span>
-            <span className="font-semibold text-white">{activeBubble.text}</span>
+            <span className="font-semibold text-slate-800">{activeBubble.text}</span>
           </div>
         </div>
       )}
 
       {/* Emoji Reaction Bar */}
-      <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-lg">
-        <span className="text-[10px] uppercase font-bold text-slate-500 px-2 hidden sm:inline">
+      <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-white border border-slate-200 shadow-xs">
+        <span className="text-[10px] uppercase font-bold text-slate-400 px-2 hidden sm:inline">
           Cảm xúc:
         </span>
         {REACTIONS.map((r, i) => (
           <button
             key={i}
             onClick={() => handleSend(r.emoji, r.text)}
-            className="p-1.5 sm:px-2.5 sm:py-1 rounded-xl hover:bg-slate-800 text-slate-300 hover:text-white transition flex items-center gap-1 text-xs font-semibold active:scale-95"
+            className="p-1.5 sm:px-2.5 sm:py-1 rounded-xl hover:bg-slate-100 text-slate-700 hover:text-blue-600 transition flex items-center gap-1 text-xs font-semibold active:scale-95"
             title={r.text}
           >
             <span className="text-base">{r.emoji}</span>
-            <span className="hidden md:inline text-[11px] text-slate-400">{r.text}</span>
+            <span className="hidden md:inline text-[11px] text-slate-600">{r.text}</span>
           </button>
         ))}
       </div>

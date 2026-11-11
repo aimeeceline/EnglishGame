@@ -40,11 +40,11 @@ export default function BattleRoomPage({
 
   if (!isLoaded || !room) {
     return (
-      <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
+      <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800">
         <Navbar />
         <div className="flex-1 flex flex-col items-center justify-center p-6">
-          <Loader2 className="w-10 h-10 text-indigo-500 animate-spin mb-4" />
-          <p className="text-sm font-semibold text-slate-400">
+          <Loader2 className="w-10 h-10 text-blue-600 animate-spin mb-4" />
+          <p className="text-sm font-semibold text-slate-600">
             Đang kết nối vào phòng {roomCode}...
           </p>
         </div>
@@ -128,7 +128,7 @@ export default function BattleRoomPage({
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
+    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800">
       <Navbar />
 
       <main className="flex-1 flex flex-col items-center justify-center">

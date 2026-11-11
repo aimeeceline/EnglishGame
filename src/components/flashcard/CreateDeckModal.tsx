@@ -53,28 +53,28 @@ export default function CreateDeckModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-slate-900 border border-indigo-900/80 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-6 shadow-2xl relative text-slate-800">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition"
+          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition"
         >
           <X className="w-5 h-5" />
         </button>
 
         <div className="flex items-center gap-3 mb-5">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-sky-500 flex items-center justify-center shadow-md shadow-blue-500/20">
             <Layers className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-white">Tạo Bộ Thẻ Mới</h2>
-            <p className="text-xs text-slate-400">Tự soạn danh sách từ vựng theo ý muốn</p>
+            <h2 className="text-xl font-bold text-slate-900">Tạo Bộ Thẻ Mới</h2>
+            <p className="text-xs text-slate-500">Tự soạn danh sách từ vựng theo ý muốn</p>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
               Tên Bộ Thẻ: *
             </label>
             <input
@@ -83,13 +83,13 @@ export default function CreateDeckModal({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="VD: 50 Động Từ Bất Quy Tắc Hay Gặp"
-              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+              className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500"
               autoFocus
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
               Mô Tả:
             </label>
             <textarea
@@ -97,12 +97,12 @@ export default function CreateDeckModal({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Ghi chú thêm về mục tiêu của bộ thẻ này..."
-              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+              className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
               Chủ Đề (Danh mục):
             </label>
             <div className="grid grid-cols-3 gap-2">
@@ -113,8 +113,8 @@ export default function CreateDeckModal({
                   onClick={() => setCategory(cat)}
                   className={`py-2 px-1 text-xs font-bold rounded-lg border text-center transition ${
                     category === cat
-                      ? "bg-indigo-600 border-indigo-500 text-white"
-                      : "bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700"
+                      ? "bg-blue-600 border-blue-600 text-white shadow-xs"
+                      : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
                   }`}
                 >
                   {cat}
@@ -126,7 +126,7 @@ export default function CreateDeckModal({
           <button
             type="submit"
             disabled={isSaving || !title.trim()}
-            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition disabled:opacity-50 mt-2"
+            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-600 via-sky-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-white font-bold text-xs shadow-md shadow-blue-500/25 flex items-center justify-center gap-2 transition disabled:opacity-50 mt-2"
           >
             {isSaving ? (
               <>
