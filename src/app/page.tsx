@@ -480,61 +480,6 @@ export default function HomePage() {
 
        
 
-        {/* Recent Battle History Section (If any real matches exist) */}
-        {history.length > 0 && (
-          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-left">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <History className="w-5 h-5 text-blue-600" />
-                <h2 className="text-xl font-bold text-slate-900">Lịch Sử Thi Đấu Gần Đây</h2>
-              </div>
-              <Link
-                href="/leaderboard"
-                className="text-xs font-semibold text-amber-600 hover:text-amber-700 flex items-center gap-1"
-              >
-                Xem Bảng Xếp Hạng 🏆
-              </Link>
-            </div>
-
-            <div className="space-y-2.5">
-              {history.map((item, idx) => (
-                <div
-                  key={idx}
-                  className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs flex items-center justify-between gap-4"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs shrink-0 ${
-                      item.isWinner
-                        ? "bg-amber-100 text-amber-800 border border-amber-300"
-                        : item.isDraw
-                          ? "bg-slate-100 text-slate-600 border border-slate-200"
-                          : "bg-rose-100 text-rose-800 border border-rose-300"
-                    }`}>
-                      {item.isWinner ? "THẮNG" : item.isDraw ? "HÒA" : "THUA"}
-                    </div>
-
-                    <div>
-                      <h4 className="font-bold text-sm text-slate-900">{item.deckTitle}</h4>
-                      <p className="text-xs text-slate-500">
-                        Đối thủ: <strong className="text-blue-600">{item.opponentName}</strong> • Phòng <span className="font-mono font-bold text-slate-700">{item.roomCode}</span>
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="text-right">
-                    <span className="font-mono font-black text-sm sm:text-base text-blue-600">
-                      {item.myScore} <span className="text-slate-400 font-sans text-xs">vs</span> {item.opponentScore}
-                    </span>
-                    <span className="block text-[10px] text-slate-400">
-                      {new Date(item.date).toLocaleDateString("vi-VN")}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
       </main>
 
       {/* FOOTER */}

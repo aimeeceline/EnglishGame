@@ -1,7 +1,8 @@
 import { FlashcardItem } from "@/types/vocab";
 
 /**
- * Hàm bỏ dấu tiếng Việt chuẩn xác (VD: "Từ vựng" -> "tuvung", "Nghĩa tiếng Việt" -> "nghiatiengviet")
+ * Hàm chuẩn hóa và loại bỏ dấu tiếng Việt để so khớp header linh hoạt
+ * VD: "Từ Vựng (Mới)" -> "tuvungmoi", "Nghĩa Tiếng Việt" -> "nghiatiengviet"
  */
 export function removeVietnameseTones(str: string): string {
   if (!str) return "";
@@ -11,27 +12,49 @@ export function removeVietnameseTones(str: string): string {
     .replace(/đ/g, "d")
     .replace(/Đ/g, "D")
     .toLowerCase()
-    .replace(/[^a-z0-9_]/g, "");
+    .replace(/[^a-z0-9]/g, "");
+}
+
+export interface GoogleSheetInfo {
+  sheetId: string;
+  gid: string;
+  isPublished?: boolean;
 }
 
 /**
- * Trích xuất Sheet ID và GID từ liên kết Google Sheet
+ * Trích xuất ID và GID từ bất kỳ dạng link Google Sheet nào:
+ * - Link chỉnh sửa: https://docs.google.com/spreadsheets/d/<ID>/edit...
+ * - Link xuất bản web: https://docs.google.com/spreadsheets/d/e/<ID>/pub...
+ * - Link chia sẻ: https://docs.google.com/spreadsheets/d/<ID>/view...
  */
-export function extractGoogleSheetInfo(url: string): { sheetId: string; gid: string } | null {
+export function extractGoogleSheetInfo(url: string): GoogleSheetInfo | null {
+  if (!url || typeof url !== "string") return null;
+
   try {
-    const sheetIdMatch = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+    const trimmed = url.trim();
+
+    // 1. Dạng link xuất bản web: /d/e/2PACX-...
+    const publishedMatch = trimmed.match(/\/d\/e\/([a-zA-Z0-9-_]+)/);
+    if (publishedMatch && publishedMatch[1]) {
+      let gid = "0";
+      const gidMatch = trimmed.match(/[#?&]gid=([0-9]+)/);
+      if (gidMatch && gidMatch[1]) gid = gidMatch[1];
+      return { sheetId: publishedMatch[1], gid, isPublished: true };
+    }
+
+    // 2. Dạng link thông thường: /d/<SHEET_ID>
+    const sheetIdMatch = trimmed.match(/\/d\/([a-zA-Z0-9-_]+)/);
     if (!sheetIdMatch || !sheetIdMatch[1]) {
       return null;
     }
-    const sheetId = sheetIdMatch[1];
 
     let gid = "0";
-    const gidMatch = url.match(/[#?&]gid=([0-9]+)/);
+    const gidMatch = trimmed.match(/[#?&]gid=([0-9]+)/);
     if (gidMatch && gidMatch[1]) {
       gid = gidMatch[1];
     }
 
-    return { sheetId, gid };
+    return { sheetId: sheetIdMatch[1], gid, isPublished: false };
   } catch (error) {
     console.error("Lỗi trích xuất thông tin Google Sheet:", error);
     return null;
@@ -39,59 +62,143 @@ export function extractGoogleSheetInfo(url: string): { sheetId: string; gid: str
 }
 
 /**
- * Tạo URL xuất CSV từ Google Sheet
+ * Tạo URL tải CSV trực tiếp từ Google Sheet
  */
 export function getGoogleSheetCsvUrl(url: string): string | null {
   const info = extractGoogleSheetInfo(url);
   if (!info) return null;
+
+  if (info.isPublished) {
+    return `https://docs.google.com/spreadsheets/d/e/${info.sheetId}/pub?output=csv&gid=${info.gid}`;
+  }
+
+  // Phương thức /export?format=csv là chuẩn nhất của Google Drive
+  return `https://docs.google.com/spreadsheets/d/${info.sheetId}/export?format=csv&gid=${info.gid}`;
+}
+
+/**
+ * Phương thức URL dự phòng qua gviz
+ */
+export function getGoogleSheetGvizCsvUrl(url: string): string | null {
+  const info = extractGoogleSheetInfo(url);
+  if (!info) return null;
+  if (info.isPublished) return null;
   return `https://docs.google.com/spreadsheets/d/${info.sheetId}/gviz/tq?tqx=out:csv&gid=${info.gid}`;
 }
 
 /**
- * Tách dòng CSV có xử lý dấu ngoặc kép an toàn
+ * Bộ phân tích cú pháp CSV/TSV chuẩn RFC-4180
+ * Hỗ trợ dấu ngoặc kép, nội dung nhiều dòng, tự động nhận diện dấu phẩy `,`, chấm phẩy `;` hoặc tab `\t`
  */
-function parseCsvLine(line: string): string[] {
-  const result: string[] = [];
-  let current = '';
+export function parseCsvRows(text: string): string[][] {
+  if (!text || text.trim().length === 0) return [];
+
+  // Tự động nhận diện dấu phân cách phổ biến
+  const firstLine = text.slice(0, 1000).split(/\r?\n/)[0] || "";
+  let delimiter = ',';
+  if (firstLine.includes('\t')) delimiter = '\t';
+  else if (firstLine.includes(';') && (firstLine.match(/;/g) || []).length > (firstLine.match(/,/g) || []).length) {
+    delimiter = ';';
+  }
+
+  const rows: string[][] = [];
+  let currentRow: string[] = [];
+  let currentField = '';
   let inQuotes = false;
 
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    const nextChar = text[i + 1];
+
     if (char === '"') {
-      if (inQuotes && line[i + 1] === '"') {
-        current += '"';
-        i++;
+      if (inQuotes && nextChar === '"') {
+        currentField += '"';
+        i++; // Bỏ qua ký tự thoát quote kế tiếp
       } else {
         inQuotes = !inQuotes;
       }
-    } else if (char === ',' && !inQuotes) {
-      result.push(current.trim());
-      current = '';
+    } else if (char === delimiter && !inQuotes) {
+      currentRow.push(currentField.trim());
+      currentField = '';
+    } else if ((char === '\r' || char === '\n') && !inQuotes) {
+      if (char === '\r' && nextChar === '\n') {
+        i++; // Bỏ qua \n nếu là \r\n
+      }
+      currentRow.push(currentField.trim());
+      if (currentRow.some(cell => cell.length > 0)) {
+        rows.push(currentRow);
+      }
+      currentRow = [];
+      currentField = '';
     } else {
-      current += char;
+      currentField += char;
     }
   }
-  result.push(current.trim());
-  return result;
+
+  // Dòng cuối cùng nếu còn dữ liệu
+  if (currentField.length > 0 || currentRow.length > 0) {
+    currentRow.push(currentField.trim());
+    if (currentRow.some(cell => cell.length > 0)) {
+      rows.push(currentRow);
+    }
+  }
+
+  return rows;
 }
 
 /**
- * Parse nội dung CSV thành danh sách FlashcardItem với khả năng tự nhận diện tiếng Việt không dấu & có dấu
+ * Từ điển các từ khóa nhận dạng tiêu đề cột (Dynamic Header Mapping)
+ */
+const HEADER_KEYWORDS = {
+  word: [
+    'word', 'words', 'tu', 'tuvung', 'tumoi', 'thuatngu', 'term', 'terms',
+    'vocabulary', 'vocab', 'tienganh', 'english', 'englishword', 'front',
+    'keyword', 'phrase', 'cumtu', 'question', 'cauhoi'
+  ],
+  meaning: [
+    'meaning', 'meanings', 'nghia', 'dinhnghia', 'dich', 'dichnghia', 'giainghia',
+    'tiengviet', 'vietnamese', 'nghiatiengviet', 'dichviet', 'back', 'definition',
+    'definitions', 'translation', 'translations', 'ynghia', 'bandich', 'vn', 'answer', 'dapan'
+  ],
+  phonetic: [
+    'phonetic', 'phonetics', 'ipa', 'phienam', 'phienamipa', 'phatam',
+    'pronunciation', 'sound', 'transcription'
+  ],
+  pos: [
+    'pos', 'partofspeech', 'tuloai', 'loaitu', 'type', 'wordtype', 'category'
+  ],
+  example: [
+    'example', 'examples', 'vidu', 'cauvidu', 'sentence', 'sentences',
+    'context', 'sample', 'usage'
+  ],
+  translation: [
+    'translation', 'dichcau', 'dichvidu', 'vietnamesesentence', 'nghiacau', 'cautiengviet'
+  ],
+};
+
+/**
+ * Kiểm tra xem một cell có khớp với danh sách từ khóa tiêu đề hay không
+ */
+function matchesKeyword(normalizedCell: string, keywords: string[]): boolean {
+  if (!normalizedCell) return false;
+  return keywords.some(k => normalizedCell === k || normalizedCell.includes(k) || k.includes(normalizedCell));
+}
+
+/**
+ * Phân tích và trích xuất từ vựng từ nội dung CSV
+ * Hoàn toàn động: không cố định chỉ số cột, tự động nhận diện thông minh mọi cấu trúc bảng tính
  */
 export function parseVocabCsv(csvText: string): FlashcardItem[] {
-  // Kiểm tra nếu nội dung trả về là trang HTML đăng nhập Google
-  if (csvText.includes("<!DOCTYPE html") || csvText.includes("<html")) {
+  // Kiểm tra nếu nội dung là trang HTML (đăng nhập hoặc lỗi quyền truy cập)
+  if (csvText.includes("<!DOCTYPE html") || csvText.includes("<html") || csvText.includes("google-site-verification")) {
     throw new Error(
-      "Bảng tính Google Sheet này đang bị KHÓA RIÊNG TƯ. Hãy mở file Sheet, bấm nút 'Chia sẻ' (Share) góc trên bên phải và chọn 'Bất kỳ ai có đường liên kết đều có thể xem' (Anyone with the link - Viewer)!"
+      "Không thể đọc bảng tính do bị giới hạn quyền riêng tư. Hãy mở file Google Sheet, bấm nút 'Chia sẻ' (Share) và chọn 'Bất kỳ ai có đường liên kết đều có thể xem' (Anyone with the link - Viewer)!"
     );
   }
 
-  const rawLines = csvText.split(/\r?\n/).filter(line => line.trim().length > 0);
-  if (rawLines.length === 0) return [];
+  const rows = parseCsvRows(csvText);
+  if (rows.length === 0) return [];
 
-  const parsedRows = rawLines.map(line => parseCsvLine(line));
-
-  // 1. Tìm dòng chứa Header (Có thể là dòng 0 hoặc dòng 1 nếu có dòng trống)
   let headerRowIndex = -1;
   let wordIdx = -1;
   let meaningIdx = -1;
@@ -100,98 +207,123 @@ export function parseVocabCsv(csvText: string): FlashcardItem[] {
   let exampleIdx = -1;
   let transIdx = -1;
 
-  for (let r = 0; r < Math.min(5, parsedRows.length); r++) {
-    const rowNormalized = parsedRows[r].map(cell => removeVietnameseTones(cell));
+  // 1. Quét tìm dòng tiêu đề (Header Row) trong 5 dòng đầu tiên
+  const maxHeaderSearch = Math.min(5, rows.length);
+  for (let r = 0; r < maxHeaderSearch; r++) {
+    const row = rows[r];
+    const normalized = row.map(c => removeVietnameseTones(c));
 
-    const wIdx = rowNormalized.findIndex(h => 
-      ['word', 'tu', 'tuvung', 'term', 'vocabulary', 'tienganh', 'english'].some(k => h.includes(k))
-    );
-    const mIdx = rowNormalized.findIndex(h => 
-      ['meaning', 'nghia', 'dinhnghia', 'tiengviet', 'vietnamese', 'dich', 'nghiatiengviet'].some(k => h.includes(k))
-    );
+    const foundWordIdx = normalized.findIndex(h => matchesKeyword(h, HEADER_KEYWORDS.word));
+    const foundMeaningIdx = normalized.findIndex((h, idx) => idx !== foundWordIdx && matchesKeyword(h, HEADER_KEYWORDS.meaning));
 
-    if (wIdx !== -1 || mIdx !== -1) {
+    if (foundWordIdx !== -1 && foundMeaningIdx !== -1) {
       headerRowIndex = r;
-      wordIdx = wIdx;
-      meaningIdx = mIdx;
+      wordIdx = foundWordIdx;
+      meaningIdx = foundMeaningIdx;
 
-      phoneticIdx = rowNormalized.findIndex(h => 
-        ['phonetic', 'ipa', 'phienam', 'phienamipa', 'pronunciation'].some(k => h.includes(k))
-      );
-      posIdx = rowNormalized.findIndex(h => 
-        ['pos', 'partofspeech', 'tuloai', 'type', 'loaitu'].some(k => h.includes(k))
-      );
-      exampleIdx = rowNormalized.findIndex(h => 
-        ['example', 'vidu', 'cauvidu', 'sentence'].some(k => h.includes(k))
-      );
-      transIdx = rowNormalized.findIndex(h => 
-        ['translation', 'dichcau', 'dichvidu'].some(k => h.includes(k))
-      );
+      phoneticIdx = normalized.findIndex((h, idx) => idx !== wordIdx && idx !== meaningIdx && matchesKeyword(h, HEADER_KEYWORDS.phonetic));
+      posIdx = normalized.findIndex((h, idx) => idx !== wordIdx && idx !== meaningIdx && matchesKeyword(h, HEADER_KEYWORDS.pos));
+      exampleIdx = normalized.findIndex((h, idx) => idx !== wordIdx && idx !== meaningIdx && matchesKeyword(h, HEADER_KEYWORDS.example));
+      transIdx = normalized.findIndex((h, idx) => idx !== wordIdx && idx !== meaningIdx && matchesKeyword(h, HEADER_KEYWORDS.translation));
       break;
     }
   }
 
-  // 2. Nếu không tìm thấy qua Header, dùng phân tích tự động cột (Heuristic Column Detection)
+  // 2. Nếu không tìm thấy Header bằng từ khóa, dùng AI-style Heuristic phân tích nội dung dữ liệu
   if (wordIdx === -1 || meaningIdx === -1) {
     headerRowIndex = 0;
-    // Tìm cột chứa chữ tiếng Anh và cột chứa tiếng Việt trong các dòng dữ liệu
-    const sampleRows = parsedRows.slice(1, Math.min(6, parsedRows.length));
-    
-    // Mặc định: bỏ qua cột số thứ tự (nếu cột chứa số 1, 2, 3)
-    const colScores = new Map<number, { isEnglish: number; hasVietnamese: number; isNumber: number }>();
-    
+    const sampleRows = rows.slice(1, Math.min(10, rows.length));
+    const maxCols = Math.max(...rows.map(r => r.length), 0);
+
+    const scores = Array.from({ length: maxCols }, () => ({
+      englishScore: 0,
+      vietnameseScore: 0,
+      numberScore: 0,
+      shortScore: 0,
+    }));
+
     sampleRows.forEach(row => {
-      row.forEach((val, idx) => {
-        if (!colScores.has(idx)) {
-          colScores.set(idx, { isEnglish: 0, hasVietnamese: 0, isNumber: 0 });
-        }
-        const score = colScores.get(idx)!;
+      row.forEach((val, colIdx) => {
+        if (!scores[colIdx]) return;
         const trimmed = val.trim();
+        if (!trimmed) return;
+
+        // Cột số thứ tự (1, 2, 3...)
         if (/^\d+$/.test(trimmed)) {
-          score.isNumber += 1;
-        } else if (/[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i.test(trimmed)) {
-          score.hasVietnamese += 1;
-        } else if (/^[a-zA-Z\s-]+$/.test(trimmed) && trimmed.length > 2) {
-          score.isEnglish += 1;
+          scores[colIdx].numberScore += 2;
+        }
+
+        // Cột chứa chữ tiếng Việt có dấu
+        if (/[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i.test(trimmed)) {
+          scores[colIdx].vietnameseScore += 3;
+        }
+
+        // Cột tiếng Anh (chỉ gồm a-z, khoảng trắng, gạch nối, không có dấu tiếng Việt)
+        if (/^[a-zA-Z\s\-']+$/.test(trimmed) && trimmed.length >= 2) {
+          scores[colIdx].englishScore += 2;
+          if (trimmed.split(/\s+/).length <= 3) {
+            scores[colIdx].shortScore += 1; // Từ hoặc cụm từ ngắn
+          }
         }
       });
     });
 
-    let bestEnglishCol = -1;
-    let maxEnglishScore = 0;
-    let bestVietnameseCol = -1;
-    let maxVietnameseScore = 0;
-
-    colScores.forEach((score, colIdx) => {
-      if (score.isEnglish > maxEnglishScore) {
-        maxEnglishScore = score.isEnglish;
-        bestEnglishCol = colIdx;
-      }
-      if (score.hasVietnamese > maxVietnameseScore) {
-        maxVietnameseScore = score.hasVietnamese;
-        bestVietnameseCol = colIdx;
+    // Chọn cột tiếng Anh tốt nhất (bỏ qua cột số thứ tự)
+    let bestWordCol = -1;
+    let maxWordScore = -1;
+    scores.forEach((s, idx) => {
+      const score = s.englishScore + s.shortScore - s.numberScore;
+      if (score > maxWordScore && s.englishScore > 0) {
+        maxWordScore = score;
+        bestWordCol = idx;
       }
     });
 
-    if (bestEnglishCol !== -1) wordIdx = bestEnglishCol;
-    if (bestVietnameseCol !== -1) meaningIdx = bestVietnameseCol;
+    // Chọn cột tiếng Việt tốt nhất (khác cột tiếng Anh)
+    let bestMeaningCol = -1;
+    let maxMeaningScore = -1;
+    scores.forEach((s, idx) => {
+      if (idx === bestWordCol) return;
+      const score = s.vietnameseScore - s.numberScore;
+      if (score > maxMeaningScore) {
+        maxMeaningScore = score;
+        bestMeaningCol = idx;
+      }
+    });
+
+    // Gán kết quả nếu tìm thấy
+    if (bestWordCol !== -1) wordIdx = bestWordCol;
+    if (bestMeaningCol !== -1) meaningIdx = bestMeaningCol;
+
+    // Dự phòng an toàn tuyệt đối: nếu bảng chỉ có 2 cột bất kỳ
+    if (wordIdx === -1 || meaningIdx === -1) {
+      if (maxCols >= 2) {
+        wordIdx = 0;
+        meaningIdx = 1;
+      }
+    }
   }
 
-  // Nếu vẫn chưa tìm ra, mặc định cột 1 và 2 (bỏ qua cột 0 nếu trống)
-  if (wordIdx === -1) wordIdx = parsedRows[0].length > 2 ? 1 : 0;
-  if (meaningIdx === -1) meaningIdx = parsedRows[0].length > 3 ? 3 : 1;
+  if (wordIdx === -1 || meaningIdx === -1 || wordIdx === meaningIdx) {
+    throw new Error(
+      "Không thể xác định được cột Từ Vựng và Nghĩa trong bảng tính. Hãy kiểm tra các tiêu đề cột (VD: 'Word', 'Meaning') hoặc thứ tự các cột!"
+    );
+  }
 
   const items: FlashcardItem[] = [];
 
-  for (let i = headerRowIndex + 1; i < parsedRows.length; i++) {
-    const row = parsedRows[i];
+  // Trích xuất dữ liệu từng dòng
+  for (let i = headerRowIndex + 1; i < rows.length; i++) {
+    const row = rows[i];
     if (!row || row.length === 0) continue;
 
     const rawWord = row[wordIdx]?.trim() || "";
     const rawMeaning = row[meaningIdx]?.trim() || "";
 
-    // Bỏ qua dòng trống hoặc dòng header lặp lại
-    if (!rawWord || !rawMeaning || rawWord.toLowerCase() === "word" || rawWord.toLowerCase() === "từ vựng") {
+    // Bỏ qua dòng trống hoặc dòng tiêu đề bị lặp lại
+    if (!rawWord || !rawMeaning) continue;
+    const lowerWord = rawWord.toLowerCase();
+    if (lowerWord === "word" || lowerWord === "từ vựng" || lowerWord === "vocabulary" || lowerWord === "term") {
       continue;
     }
 
@@ -199,10 +331,10 @@ export function parseVocabCsv(csvText: string): FlashcardItem[] {
       id: `card_${Date.now()}_${i}`,
       word: rawWord,
       meaning: rawMeaning,
-      partOfSpeech: posIdx !== -1 ? row[posIdx]?.trim() : undefined,
-      phonetic: phoneticIdx !== -1 ? row[phoneticIdx]?.trim() : undefined,
-      exampleSentence: exampleIdx !== -1 ? row[exampleIdx]?.trim() : undefined,
-      exampleTranslation: transIdx !== -1 ? row[transIdx]?.trim() : undefined,
+      partOfSpeech: posIdx !== -1 && row[posIdx] ? row[posIdx].trim() : undefined,
+      phonetic: phoneticIdx !== -1 && row[phoneticIdx] ? row[phoneticIdx].trim() : undefined,
+      exampleSentence: exampleIdx !== -1 && row[exampleIdx] ? row[exampleIdx].trim() : undefined,
+      exampleTranslation: transIdx !== -1 && row[transIdx] ? row[transIdx].trim() : undefined,
     });
   }
 

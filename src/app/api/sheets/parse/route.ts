@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getGoogleSheetCsvUrl, parseVocabCsv } from "@/lib/sheets/parser";
+import { getGoogleSheetCsvUrl, getGoogleSheetGvizCsvUrl, parseVocabCsv } from "@/lib/sheets/parser";
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,40 +12,76 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const csvUrl = getGoogleSheetCsvUrl(sheetUrl);
-    if (!csvUrl) {
+    const primaryCsvUrl = getGoogleSheetCsvUrl(sheetUrl);
+    if (!primaryCsvUrl) {
       return NextResponse.json(
-        { error: "Định dạng liên kết Google Sheet không hợp lệ" },
+        { error: "Định dạng liên kết Google Sheet không hợp lệ. Hãy copy liên kết có dạng: https://docs.google.com/spreadsheets/d/..." },
         { status: 400 }
       );
     }
 
-    // Server-side fetch (Không bị giới hạn bởi CORS trình duyệt)
-    const response = await fetch(csvUrl, {
-      headers: {
-        "User-Agent": "EngDuel-1v1/1.0",
-      },
-      next: { revalidate: 60 }, // Cache 60 giây
-    });
+    let csvText = "";
 
-    if (!response.ok) {
+    // Thử phương thức 1: Google Export CSV chuẩn
+    try {
+      const response = await fetch(primaryCsvUrl, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        },
+        cache: "no-store",
+      });
+
+      if (response.ok) {
+        const text = await response.text();
+        if (!text.includes("<!DOCTYPE html") && !text.includes("<html")) {
+          csvText = text;
+        }
+      }
+    } catch {
+      // Fallback
+    }
+
+    // Nếu phương thức 1 chưa lấy được CSV (do trang yêu cầu gviz), thử phương thức 2: gviz/tq
+    if (!csvText) {
+      const gvizUrl = getGoogleSheetGvizCsvUrl(sheetUrl);
+      if (gvizUrl) {
+        try {
+          const gvizRes = await fetch(gvizUrl, {
+            headers: {
+              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            },
+            cache: "no-store",
+          });
+
+          if (gvizRes.ok) {
+            const text = await gvizRes.text();
+            if (!text.includes("<!DOCTYPE html") && !text.includes("<html")) {
+              csvText = text;
+            }
+          }
+        } catch {
+          // Fallback
+        }
+      }
+    }
+
+    if (!csvText) {
       return NextResponse.json(
         {
           error:
-            "Không thể đọc bảng tính. Hãy kiểm tra bạn đã bật quyền 'Bất kỳ ai có đường liên kết đều có thể xem' trên Google Drive!",
+            "Không thể đọc nội dung bảng tính. Hãy đảm bảo bạn đã mở Google Sheet, bấm nút 'Chia sẻ' (Share) và đổi quyền truy cập thành 'Bất kỳ ai có đường liên kết đều có thể xem' (Anyone with the link - Viewer)!",
         },
         { status: 403 }
       );
     }
 
-    const csvText = await response.text();
     const cards = parseVocabCsv(csvText);
 
     if (cards.length === 0) {
       return NextResponse.json(
         {
           error:
-            "Không tìm thấy từ vựng nào trong bảng tính. Hãy đảm bảo bảng có các cột như Word, Meaning!",
+            "Không tìm thấy từ vựng nào trong bảng tính. Hãy đảm bảo bảng có các cột như Word, Meaning hoặc chứa dữ liệu từ vựng hợp lệ!",
         },
         { status: 422 }
       );
@@ -64,4 +100,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-

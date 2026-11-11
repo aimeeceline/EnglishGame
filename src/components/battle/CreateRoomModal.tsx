@@ -6,7 +6,6 @@ import { X, Sparkles, FileSpreadsheet, Layers, Clock, Zap, Loader2, PenTool } fr
 import { getAllDecks } from "@/lib/firebase/decks";
 import { createBattleRoom } from "@/lib/firebase/rooms";
 import { useUserIdentity } from "@/hooks/useUserIdentity";
-import { extractGoogleSheetInfo, getGoogleSheetCsvUrl, parseVocabCsv } from "@/lib/sheets/parser";
 import { VocabDeck } from "@/types/vocab";
 import { BattleGameMode } from "@/types/battle";
 
@@ -67,22 +66,20 @@ export default function CreateRoomModal({ isOpen, onClose, initialDeckId }: Crea
         return;
       }
 
-      const csvUrl = getGoogleSheetCsvUrl(sheetUrl);
-      if (!csvUrl) {
-        setSheetError("Link Google Sheet không hợp lệ! Hãy đảm bảo link có dạng: https://docs.google.com/spreadsheets/d/...");
-        setIsCreating(false);
-        return;
-      }
-
       setIsFetchingSheet(true);
       try {
-        const response = await fetch(csvUrl);
-        if (!response.ok) {
-          throw new Error("Không thể tải file CSV từ Google Sheet. Hãy chắc chắn bạn đã bật quyền 'Bất kỳ ai có liên kết đều có thể xem'!");
-        }
-        const text = await response.text();
-        const parsedItems = parseVocabCsv(text);
+        const response = await fetch("/api/sheets/parse", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sheetUrl }),
+        });
 
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || "Không thể tải từ Google Sheet. Hãy kiểm tra quyền chia sẻ!");
+        }
+
+        const parsedItems: VocabDeck["cards"] = data.cards || [];
         if (parsedItems.length === 0) {
           throw new Error("Không tìm thấy từ vựng nào hợp lệ trong Sheet. Hãy kiểm tra các tiêu đề cột (Word, Meaning)!");
         }
