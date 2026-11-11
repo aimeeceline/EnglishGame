@@ -14,7 +14,8 @@ import {
   ShieldCheck, 
   Hourglass, 
   Share2, 
-  Loader2 
+  Loader2,
+  PenTool
 } from "lucide-react";
 import QuickReactionToolbar from "./QuickReactionToolbar";
 
@@ -185,13 +186,27 @@ export default function RoomLobby({
         <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">
           Thông Tin Trận Đấu
         </h4>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
           <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
             <span className="text-slate-500 block mb-1 flex items-center gap-1">
               <BookOpen className="w-3.5 h-3.5 text-blue-600" />
               Bộ Từ Vựng
             </span>
             <span className="font-bold text-slate-800 line-clamp-1">{room.settings.deckTitle}</span>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
+            <span className="text-slate-500 block mb-1 flex items-center gap-1">
+              <PenTool className="w-3.5 h-3.5 text-emerald-600" />
+              Hình Thức
+            </span>
+            <span className="font-bold text-slate-800">
+              {room.settings.gameMode === 'fill_in_blank'
+                ? "✍️ Gõ từ vựng"
+                : room.settings.gameMode === 'multiple_choice'
+                ? "🔘 Trắc nghiệm"
+                : "🔀 Hỗn hợp"}
+            </span>
           </div>
 
           <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
@@ -210,7 +225,7 @@ export default function RoomLobby({
             <span className="font-bold text-slate-800">{room.settings.timePerQuestion}s / mỗi câu</span>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
+          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 col-span-2 sm:col-span-1">
             <span className="text-slate-500 block mb-1">Độ Khó AI</span>
             <span className="font-bold text-emerald-700 uppercase">{room.settings.difficulty}</span>
           </div>

@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { X, Sparkles, FileSpreadsheet, Layers, Clock, Zap, Loader2 } from "lucide-react";
+import { X, Sparkles, FileSpreadsheet, Layers, Clock, Zap, Loader2, PenTool } from "lucide-react";
 import { getAllDecks } from "@/lib/firebase/decks";
 import { createBattleRoom } from "@/lib/firebase/rooms";
 import { useUserIdentity } from "@/hooks/useUserIdentity";
 import { extractGoogleSheetInfo, getGoogleSheetCsvUrl, parseVocabCsv } from "@/lib/sheets/parser";
 import { VocabDeck } from "@/types/vocab";
+import { BattleGameMode } from "@/types/battle";
 
 interface CreateRoomModalProps {
   isOpen: boolean;
@@ -29,6 +30,7 @@ export default function CreateRoomModal({ isOpen, onClose, initialDeckId }: Crea
   const [totalQuestions, setTotalQuestions] = useState<number>(10);
   const [timePerQuestion, setTimePerQuestion] = useState<number>(15);
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
+  const [gameMode, setGameMode] = useState<BattleGameMode>('mixed');
   const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
@@ -119,6 +121,7 @@ export default function CreateRoomModal({ isOpen, onClose, initialDeckId }: Crea
           totalQuestions,
           timePerQuestion,
           difficulty,
+          gameMode,
         }
       );
 
@@ -288,6 +291,36 @@ export default function CreateRoomModal({ isOpen, onClose, initialDeckId }: Crea
                 </button>
               ))}
             </div>
+          </div>
+        </div>
+
+        {/* Game Mode: Mixed, Multiple Choice, Fill in blank */}
+        <div className="mb-4">
+          <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 mb-1.5">
+            <PenTool className="w-3.5 h-3.5 text-emerald-600" />
+            Hình Thức Câu Hỏi
+          </label>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { id: 'mixed', label: 'Hỗn Hợp', desc: 'Trắc nghiệm + Gõ từ', icon: '🔀' },
+              { id: 'multiple_choice', label: 'Trắc Nghiệm', desc: '4 Lựa chọn A/B/C/D', icon: '🔘' },
+              { id: 'fill_in_blank', label: 'Gõ Từ Vựng', desc: 'Điền vào chỗ trống', icon: '✍️' },
+            ].map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => setGameMode(m.id as BattleGameMode)}
+                className={`p-2.5 rounded-xl text-left border transition flex flex-col items-start ${
+                  gameMode === m.id
+                    ? "bg-blue-50/80 border-blue-500 text-blue-900 shadow-xs ring-1 ring-blue-500/30"
+                    : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
+                }`}
+              >
+                <span className="text-base mb-1">{m.icon}</span>
+                <span className="text-xs font-bold leading-tight">{m.label}</span>
+                <span className="text-[10px] text-slate-400 mt-0.5 leading-tight">{m.desc}</span>
+              </button>
+            ))}
           </div>
         </div>
 

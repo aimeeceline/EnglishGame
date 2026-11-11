@@ -31,10 +31,10 @@ export default function MatchResultModal({
     try {
       const cardsToSave = room.questions.map((q) => {
         // Find correct option text
-        const correctOpt = q.options.find(o => o.key === q.correctAnswer);
+        const correctOpt = q.options?.find(o => o.key === q.correctAnswer);
         return {
           word: q.targetWord,
-          meaning: correctOpt?.text || q.explanation,
+          meaning: correctOpt?.text || q.hint || q.explanation,
           example: q.prompt,
         };
       });
@@ -213,7 +213,7 @@ export default function MatchResultModal({
           {room.questions.map((q, idx) => {
             const myAns = myPlayer?.answersHistory?.[idx];
             const oppAns = opponentPlayer?.answersHistory?.[idx];
-            const correctOpt = q.options.find(o => o.key === q.correctAnswer);
+            const correctOpt = q.options?.find(o => o.key === q.correctAnswer);
 
             return (
               <div key={q.id || idx} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-left">
@@ -222,7 +222,7 @@ export default function MatchResultModal({
                     Câu {idx + 1}: {q.targetWord}
                   </span>
                   <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold border border-emerald-300 text-[11px]">
-                    Đáp án đúng: {q.correctAnswer} - {correctOpt?.text}
+                    Đáp án đúng: {correctOpt ? `${q.correctAnswer} - ${correctOpt.text}` : q.correctAnswer}
                   </span>
                 </div>
                 

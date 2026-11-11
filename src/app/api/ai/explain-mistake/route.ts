@@ -28,20 +28,21 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    const hasOptions = Array.isArray(options) && options.length > 0;
     const prompt = `
-Bạn là giáo viên bản ngữ chuyên luyện thi TOEIC/IELTS cho học sinh Việt Nam.
-Một học sinh vừa làm sai câu hỏi trắc nghiệm tiếng Anh sau:
+Bạn là giáo viên bản ngữ chuyên luyện thi tiếng Anh cho học sinh Việt Nam.
+Một học sinh vừa làm câu hỏi tiếng Anh sau:
 
 Câu hỏi: "${questionPrompt}"
 Từ vựng trọng tâm: "${targetWord}"
-Các phương án: ${JSON.stringify(options)}
-Đáp án đúng: Phương án ${correctAnswer}
-Phương án học sinh đã chọn: ${selectedAnswer ? `Phương án ${selectedAnswer}` : "Hết giờ (chưa chọn)"}
+${hasOptions ? `Các phương án: ${JSON.stringify(options)}` : "Hình thức: Điền từ vào chỗ trống"}
+Đáp án đúng: ${correctAnswer}
+Câu trả lời học sinh đã nhập/chọn: ${selectedAnswer ? selectedAnswer : "Hết giờ (chưa nhập)"}
 
 Hãy phân tích chi tiết bằng Tiếng Việt thân thiện, dễ hiểu, giúp học sinh ghi nhớ sâu sắc:
 Trả về duy nhất JSON theo mẫu:
 {
-  "analysis": "Phân tích vì sao đáp án đúng là chính xác, giải nghĩa câu và chỉ ra vì sao phương án học sinh chọn lại sai (bẫy từ loại, bẫy đồng âm, hoặc sai ngữ cảnh)",
+  "analysis": "Phân tích vì sao đáp án đúng là chính xác, giải nghĩa câu và chỉ ra vì sao câu trả lời học sinh đưa ra lại sai (lỗi chính tả, nhầm từ loại, sai ngữ cảnh, v.v.)",
   "grammarTip": "Mẹo ngữ pháp hoặc cấu trúc collocation cần nhớ",
   "examples": [
     "Câu ví dụ thực tế 1 kèm dịch nghĩa tiếng Việt",

@@ -8,7 +8,7 @@ interface AIExplanationModalProps {
   isOpen: boolean;
   onClose: () => void;
   question: BattleQuestion | null;
-  selectedAnswer: 'A' | 'B' | 'C' | 'D' | null;
+  selectedAnswer: string | null;
 }
 
 interface AIAnalysisResult {

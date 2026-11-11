@@ -133,6 +133,7 @@ export default function HomePage() {
             totalQuestions: 10,
             timePerQuestion: 15,
             difficulty: "medium",
+            gameMode: "mixed",
           }
         );
         router.push(`/battle/${roomCode}`);

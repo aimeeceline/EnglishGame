@@ -284,7 +284,7 @@ export async function startBattleWithQuestions(
 export async function submitPlayerAnswer(
   roomCode: string,
   playerUid: string,
-  selectedKey: 'A' | 'B' | 'C' | 'D' | null,
+  selectedKey: string | null,
   timeRemainingSeconds: number
 ) {
   const cleanCode = roomCode.trim().toUpperCase();
@@ -303,7 +303,19 @@ export async function submitPlayerAnswer(
     return;
   }
 
-  const isCorrect = selectedKey !== null && selectedKey === currentQ.correctAnswer;
+  const isFillInBlank = currentQ.type === 'fill_in_blank' || (!currentQ.options || currentQ.options.length === 0);
+  let isCorrect = false;
+
+  if (selectedKey !== null && selectedKey !== undefined && selectedKey.trim().length > 0) {
+    if (isFillInBlank) {
+      const cleanAnswer = selectedKey.trim().toLowerCase();
+      const cleanTarget = currentQ.targetWord.trim().toLowerCase();
+      const cleanCorrect = currentQ.correctAnswer.trim().toLowerCase();
+      isCorrect = cleanAnswer === cleanTarget || cleanAnswer === cleanCorrect;
+    } else {
+      isCorrect = selectedKey.trim().toUpperCase() === currentQ.correctAnswer.trim().toUpperCase();
+    }
+  }
   let points = 0;
 
   if (isCorrect) {

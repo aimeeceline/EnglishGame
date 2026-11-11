@@ -87,6 +87,7 @@ export default function BattleRoomPage({
             cards: cardsPool,
             totalQuestions: room.settings.totalQuestions,
             difficulty: room.settings.difficulty,
+            gameMode: room.settings.gameMode || 'mixed',
           }),
         });
         if (res.ok) {
@@ -104,7 +105,8 @@ export default function BattleRoomPage({
         questions = await generateBattleQuestions(
           cardsPool,
           room.settings.totalQuestions,
-          room.settings.difficulty
+          room.settings.difficulty,
+          room.settings.gameMode || 'mixed'
         );
       }
 

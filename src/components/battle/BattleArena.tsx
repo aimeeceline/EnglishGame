@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { BattleRoom } from "@/types/battle";
 import { submitPlayerAnswer, proceedToNextQuestion } from "@/lib/firebase/rooms";
 import { useSoundEffects } from "@/hooks/useSoundEffects";
-import { Crown, Swords, Zap, CheckCircle2, XCircle, Clock, Sparkles } from "lucide-react";
+import { Crown, Swords, Zap, CheckCircle2, XCircle, Clock, Sparkles, PenTool, Send, HelpCircle } from "lucide-react";
 import QuickReactionToolbar from "./QuickReactionToolbar";
 
 interface BattleArenaProps {
@@ -23,13 +23,29 @@ export default function BattleArena({ room, currentUserUid }: BattleArenaProps) 
   const timePerQ = room.settings.timePerQuestion || 15;
 
   const [timeLeft, setTimeLeft] = useState<number>(timePerQ);
-  const [selectedKey, setSelectedKey] = useState<'A' | 'B' | 'C' | 'D' | null>(null);
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const [typedWord, setTypedWord] = useState<string>("");
+
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Xác định câu hiện tại là điền từ hay trắc nghiệm
+  const isFillInBlank = Boolean(
+    currentQ && (currentQ.type === 'fill_in_blank' || !currentQ.options || currentQ.options.length === 0)
+  );
 
   // Sync state when round changes
   useEffect(() => {
     setSelectedKey(null);
+    setTypedWord("");
     setTimeLeft(timePerQ);
-  }, [room.currentQuestionIndex, timePerQ]);
+
+    // Tự động focus vào ô nhập từ khi sang câu hỏi điền từ mới
+    if (isFillInBlank) {
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
+    }
+  }, [room.currentQuestionIndex, timePerQ, isFillInBlank]);
 
   // Đồng hồ đếm ngược
   useEffect(() => {
@@ -48,17 +64,18 @@ export default function BattleArena({ room, currentUserUid }: BattleArenaProps) 
       // Hết giờ
       if (remaining === 0) {
         clearInterval(interval);
-        // Tự động nộp câu trả lời rỗng nếu chưa chọn
+        // Tự động nộp câu trả lời nếu chưa chọn
         if (myPlayer && !myPlayer.currentAnswer) {
-          submitPlayerAnswer(room.roomCode, currentUserUid, null, 0);
+          const autoAnswer = isFillInBlank && typedWord.trim() ? typedWord.trim() : null;
+          submitPlayerAnswer(room.roomCode, currentUserUid, autoAnswer, 0);
         }
       }
     }, 500);
 
     return () => clearInterval(interval);
-  }, [room.status, room.questionStartedAt, timePerQ, myPlayer, room.roomCode, currentUserUid, playTick]);
+  }, [room.status, room.questionStartedAt, timePerQ, myPlayer, room.roomCode, currentUserUid, playTick, isFillInBlank, typedWord]);
 
-  // Tự động chuyển câu khi round_result kết thúc (sau 2.5 giây)
+  // Tự động chuyển câu khi round_result kết thúc (sau 2.8 giây để đọc lời giải thích)
   const isTransitioningRef = useRef(false);
   useEffect(() => {
     if (room.status === 'round_result' && isHost && !isTransitioningRef.current) {
@@ -66,7 +83,7 @@ export default function BattleArena({ room, currentUserUid }: BattleArenaProps) 
       const timer = setTimeout(async () => {
         await proceedToNextQuestion(room.roomCode);
         isTransitioningRef.current = false;
-      }, 2500);
+      }, 2800);
       return () => clearTimeout(timer);
     }
   }, [room.status, isHost, room.roomCode]);
@@ -79,12 +96,13 @@ export default function BattleArena({ room, currentUserUid }: BattleArenaProps) 
     );
   }
 
-  const handleSelectOption = async (key: 'A' | 'B' | 'C' | 'D') => {
+  // Xử lý nộp đáp án dạng trắc nghiệm A/B/C/D
+  const handleSelectOption = async (key: string) => {
     if (room.status !== 'playing' || selectedKey !== null) return;
 
     setSelectedKey(key);
 
-    const isCorrect = key === currentQ.correctAnswer;
+    const isCorrect = key.toUpperCase() === currentQ.correctAnswer.toUpperCase();
     if (isCorrect) {
       playCorrect();
     } else {
@@ -92,6 +110,30 @@ export default function BattleArena({ room, currentUserUid }: BattleArenaProps) 
     }
 
     await submitPlayerAnswer(room.roomCode, currentUserUid, key, timeLeft);
+  };
+
+  // Xử lý nộp đáp án dạng gõ từ vựng vào chỗ trống
+  const handleTypedSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (room.status !== 'playing' || selectedKey !== null) return;
+
+    const trimmed = typedWord.trim();
+    if (!trimmed) return;
+
+    setSelectedKey(trimmed);
+
+    const cleanAnswer = trimmed.toLowerCase();
+    const cleanTarget = currentQ.targetWord.trim().toLowerCase();
+    const cleanCorrect = currentQ.correctAnswer.trim().toLowerCase();
+    const isCorrect = cleanAnswer === cleanTarget || cleanAnswer === cleanCorrect;
+
+    if (isCorrect) {
+      playCorrect();
+    } else {
+      playWrong();
+    }
+
+    await submitPlayerAnswer(room.roomCode, currentUserUid, trimmed, timeLeft);
   };
 
   const hasAnswered = selectedKey !== null || (myPlayer?.currentAnswer?.questionIndex === room.currentQuestionIndex);
@@ -190,7 +232,7 @@ export default function BattleArena({ room, currentUserUid }: BattleArenaProps) 
               )
             ) : hasAnswered ? (
               <span className="text-blue-600 font-bold flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5 text-blue-500" /> Đã chọn (đang đợi đối thủ...)
+                <CheckCircle2 className="w-3.5 h-3.5 text-blue-500" /> Đã nộp bài (đợi đối thủ...)
               </span>
             ) : (
               <span className="text-amber-600 font-semibold animate-pulse">
@@ -213,7 +255,7 @@ export default function BattleArena({ room, currentUserUid }: BattleArenaProps) 
               )
             ) : opponentHasAnswered ? (
               <span className="text-emerald-700 font-bold flex items-center gap-1 animate-bounce">
-                ⚡ ĐÃ CHỌN ĐÁP ÁN!
+                ⚡ ĐÃ NỘP BÀI!
               </span>
             ) : (
               <span className="text-slate-400 italic">
@@ -236,71 +278,174 @@ export default function BattleArena({ room, currentUserUid }: BattleArenaProps) 
 
       {/* Question Box */}
       <div className="w-full bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 mb-6 shadow-sm text-center relative">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold mb-4">
-          <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-          Từ vựng: <span className="font-mono text-slate-900 text-sm font-bold">{currentQ.targetWord}</span>
-        </div>
+        {isFillInBlank ? (
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold mb-3">
+            <PenTool className="w-3.5 h-3.5 text-emerald-600" />
+            Dạng bài: Gõ từ vựng tiếng Anh vào chỗ trống
+          </div>
+        ) : (
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold mb-3">
+            <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+            Từ vựng: <span className="font-mono text-slate-900 text-sm font-bold">{currentQ.targetWord}</span>
+          </div>
+        )}
 
-        <h3 className="text-lg sm:text-2xl font-bold text-slate-900 leading-relaxed max-w-2xl mx-auto">
+        <h3 className="text-lg sm:text-2xl font-bold text-slate-900 leading-relaxed max-w-2xl mx-auto whitespace-pre-line">
           {currentQ.prompt}
         </h3>
+
+        {/* Gợi ý cho câu hỏi (nếu có) */}
+        {currentQ.hint && (
+          <div className="mt-3 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-50 border border-amber-200/80 text-amber-800 text-xs font-medium">
+            <HelpCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+            <span>{currentQ.hint}</span>
+          </div>
+        )}
       </div>
 
-      {/* 4 Answer Option Buttons */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 w-full mb-6">
-        {currentQ.options.map((opt) => {
-          const isSelected = selectedKey === opt.key;
-          const isCorrect = opt.key === currentQ.correctAnswer;
-          
-          let btnStyle = "bg-white border-2 border-slate-200 hover:border-blue-400 hover:bg-blue-50/30 text-slate-800 shadow-xs";
+      {/* Answer Area: Conditional based on Question Type */}
+      {isFillInBlank ? (
+        /* ================= DẠNG 1: GÕ TỪ VÀO CHỖ TRỐNG ================= */
+        <div className="w-full max-w-xl mx-auto mb-6">
+          <form onSubmit={handleTypedSubmit} className="flex flex-col gap-3">
+            <div className="relative">
+              <input
+                ref={inputRef}
+                type="text"
+                value={typedWord}
+                onChange={(e) => setTypedWord(e.target.value)}
+                disabled={hasAnswered || isRoundResult}
+                placeholder="Gõ từ vựng tiếng Anh vào đây..."
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="none"
+                spellCheck="false"
+                className={`w-full px-5 py-4 pr-12 rounded-2xl border-2 font-mono text-lg sm:text-xl font-bold transition-all shadow-sm outline-none ${
+                  isRoundResult
+                    ? myPlayer?.currentAnswer?.isCorrect
+                      ? "bg-emerald-50 border-emerald-500 text-emerald-900 ring-2 ring-emerald-500/20"
+                      : "bg-rose-50 border-rose-500 text-rose-900 ring-2 ring-rose-500/20"
+                    : hasAnswered
+                    ? "bg-blue-50 border-blue-400 text-blue-900"
+                    : "bg-white border-slate-300 focus:border-blue-600 focus:ring-4 focus:ring-blue-500/10 text-slate-800"
+                }`}
+              />
+              {typedWord && !hasAnswered && !isRoundResult && (
+                <button
+                  type="button"
+                  onClick={() => setTypedWord("")}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
 
-          if (isRoundResult) {
-            if (isCorrect) {
-              btnStyle = "bg-emerald-50 border-2 border-emerald-500 text-emerald-900 shadow-md shadow-emerald-500/15 scale-[1.01]";
-            } else if (isSelected) {
-              btnStyle = "bg-rose-50 border-2 border-rose-500 text-rose-900";
-            } else {
-              btnStyle = "bg-slate-50 border-2 border-slate-200 text-slate-400 opacity-60";
-            }
-          } else if (isSelected) {
-            btnStyle = "bg-blue-600 border-2 border-blue-600 text-white shadow-md shadow-blue-500/25 scale-[1.01]";
-          }
-
-          return (
-            <button
-              key={opt.key}
-              onClick={() => handleSelectOption(opt.key)}
-              disabled={hasAnswered || isRoundResult}
-              className={`p-4 sm:p-5 rounded-2xl border text-left flex items-center gap-3.5 transition-all active:scale-[0.98] disabled:cursor-not-allowed ${btnStyle}`}
-            >
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm shrink-0 transition ${
-                isSelected
-                  ? "bg-white text-blue-700"
-                  : isRoundResult && isCorrect
-                    ? "bg-emerald-600 text-white"
-                    : "bg-slate-100 text-slate-700 border border-slate-200"
-              }`}>
-                {opt.key}
+            {!hasAnswered && !isRoundResult ? (
+              <button
+                type="submit"
+                disabled={!typedWord.trim()}
+                className="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-700 hover:to-emerald-700 disabled:from-slate-200 disabled:to-slate-300 disabled:text-slate-400 text-white font-extrabold text-base shadow-md shadow-blue-500/20 active:scale-[0.99] transition flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
+              >
+                <span>Nộp Đáp Án</span>
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-white/20">Enter ↵</span>
+                <Send className="w-4 h-4 ml-1" />
+              </button>
+            ) : hasAnswered && !isRoundResult ? (
+              <div className="py-3 px-4 rounded-2xl bg-blue-50 border border-blue-200 text-blue-800 text-center font-bold text-sm flex items-center justify-center gap-2 animate-pulse">
+                <CheckCircle2 className="w-4 h-4 text-blue-600" />
+                Đã nộp: &quot;{typedWord || myPlayer?.currentAnswer?.selectedKey}&quot; — Đang đợi đối thủ...
               </div>
-              <span className="font-semibold text-sm sm:text-base flex-1">
-                {opt.text}
-              </span>
-              {isRoundResult && isCorrect && (
-                <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-              )}
-              {isRoundResult && isSelected && !isCorrect && (
-                <XCircle className="w-5 h-5 text-rose-500 shrink-0" />
-              )}
-            </button>
-          );
-        })}
-      </div>
+            ) : null}
+          </form>
+
+          {/* Chi tiết kết quả khi hết vòng đấu điền từ */}
+          {isRoundResult && (
+            <div className="mt-4 p-4 rounded-2xl border bg-white shadow-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                  <span className="text-xs text-slate-500 font-semibold block mb-1">Từ bạn đã nhập:</span>
+                  <div className="flex items-center gap-2 font-bold font-mono text-base">
+                    {myPlayer?.currentAnswer?.isCorrect ? (
+                      <span className="text-emerald-700 flex items-center gap-1.5">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                        {myPlayer?.currentAnswer?.selectedKey || "(Chưa nhập)"}
+                      </span>
+                    ) : (
+                      <span className="text-rose-600 flex items-center gap-1.5">
+                        <XCircle className="w-4 h-4 text-rose-500 shrink-0" />
+                        {myPlayer?.currentAnswer?.selectedKey || "(Chưa nhập)"}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200">
+                  <span className="text-xs text-emerald-700 font-semibold block mb-1">Đáp án chính xác:</span>
+                  <div className="font-bold font-mono text-base text-emerald-900">
+                    {currentQ.targetWord}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        /* ================= DẠNG 2: TRẮC NGHIỆM 4 LỰA CHỌN ================= */
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 w-full mb-6">
+          {(currentQ.options || []).map((opt) => {
+            const isSelected = selectedKey === opt.key || myPlayer?.currentAnswer?.selectedKey === opt.key;
+            const isCorrect = opt.key.toUpperCase() === currentQ.correctAnswer.toUpperCase();
+            
+            let btnStyle = "bg-white border-2 border-slate-200 hover:border-blue-400 hover:bg-blue-50/30 text-slate-800 shadow-xs";
+
+            if (isRoundResult) {
+              if (isCorrect) {
+                btnStyle = "bg-emerald-50 border-2 border-emerald-500 text-emerald-900 shadow-md shadow-emerald-500/15 scale-[1.01]";
+              } else if (isSelected) {
+                btnStyle = "bg-rose-50 border-2 border-rose-500 text-rose-900";
+              } else {
+                btnStyle = "bg-slate-50 border-2 border-slate-200 text-slate-400 opacity-60";
+              }
+            } else if (isSelected) {
+              btnStyle = "bg-blue-600 border-2 border-blue-600 text-white shadow-md shadow-blue-500/25 scale-[1.01]";
+            }
+
+            return (
+              <button
+                key={opt.key}
+                onClick={() => handleSelectOption(opt.key)}
+                disabled={hasAnswered || isRoundResult}
+                className={`p-4 sm:p-5 rounded-2xl border text-left flex items-center gap-3.5 transition-all active:scale-[0.98] disabled:cursor-not-allowed ${btnStyle}`}
+              >
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm shrink-0 transition ${
+                  isSelected
+                    ? "bg-white text-blue-700"
+                    : isRoundResult && isCorrect
+                      ? "bg-emerald-600 text-white"
+                      : "bg-slate-100 text-slate-700 border border-slate-200"
+                }`}>
+                  {opt.key}
+                </div>
+                <span className="font-semibold text-sm sm:text-base flex-1">
+                  {opt.text}
+                </span>
+                {isRoundResult && isCorrect && (
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                )}
+                {isRoundResult && isSelected && !isCorrect && (
+                  <XCircle className="w-5 h-5 text-rose-500 shrink-0" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Round Result Explanation Bar */}
       {isRoundResult && (
-        <div className="w-full p-4 rounded-2xl bg-emerald-50/90 border border-emerald-200 text-emerald-950 animate-in fade-in duration-300 shadow-xs">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-bold uppercase tracking-wider text-emerald-800">
+        <div className="w-full p-4 sm:p-5 rounded-2xl bg-emerald-50/90 border border-emerald-200 text-emerald-950 animate-in fade-in duration-300 shadow-xs">
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="text-xs font-bold uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
               💡 Giải Thích Chi Tiết Của AI:
             </span>
           </div>
@@ -313,4 +458,3 @@ export default function BattleArena({ room, currentUserUid }: BattleArenaProps) 
     </div>
   );
 }
-

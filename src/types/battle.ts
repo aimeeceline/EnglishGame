@@ -1,8 +1,10 @@
 export type RoomStatus = 'waiting' | 'generating' | 'playing' | 'round_result' | 'finished';
+export type QuestionType = 'multiple_choice' | 'fill_in_blank';
+export type BattleGameMode = 'mixed' | 'multiple_choice' | 'fill_in_blank';
 
 export interface PlayerAnswer {
   questionIndex: number;
-  selectedKey: 'A' | 'B' | 'C' | 'D' | null;
+  selectedKey: string | null;  // 'A' | 'B' | 'C' | 'D' hoặc từ gõ vào cho fill_in_blank
   answeredAt: number;        // Timestamp ms lúc bấm chọn
   timeRemainingSeconds: number;
   isCorrect?: boolean;
@@ -31,19 +33,22 @@ export interface BattleOption {
 export interface BattleQuestion {
   id: string;
   questionNumber: number;
-  prompt: string;              // Câu hỏi tiếng Anh
+  type?: QuestionType;         // 'multiple_choice' | 'fill_in_blank'
+  prompt: string;              // Câu hỏi tiếng Anh hoặc câu khuyết từ
   targetWord: string;          // Từ vựng chính
-  options: BattleOption[];
-  correctAnswer: 'A' | 'B' | 'C' | 'D';
+  options?: BattleOption[];    // Lựa chọn (đối với trắc nghiệm)
+  correctAnswer: string;       // 'A' | 'B' | 'C' | 'D' hoặc targetWord (đối với điền từ)
+  hint?: string;               // Gợi ý cho câu điền từ
   explanation: string;         // Lời giải thích tiếng Việt từ AI
 }
 
 export interface RoomSettings {
   deckId: string;
   deckTitle: string;
-  totalQuestions: number;      // 5, 10, 15
+  totalQuestions: number;      // 10, 20, 30
   timePerQuestion: number;     // 10, 15, 20 giây
   difficulty: 'easy' | 'medium' | 'hard';
+  gameMode?: BattleGameMode;   // 'mixed' | 'multiple_choice' | 'fill_in_blank'
 }
 
 export interface BattleRoom {
