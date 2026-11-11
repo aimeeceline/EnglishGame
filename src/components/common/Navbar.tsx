@@ -5,11 +5,13 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Swords, Layers, Trophy, Volume2, VolumeX, Edit3, Check, Sparkles, Flame } from "lucide-react";
 import { useUserIdentity } from "@/hooks/useUserIdentity";
+import { useActiveBattle } from "@/hooks/useActiveBattle";
 import ApiKeyModal from "./ApiKeyModal";
 
 export default function Navbar() {
   const pathname = usePathname();
   const { user, updateName } = useUserIdentity();
+  const { activeBattle } = useActiveBattle();
   const [isEditing, setIsEditing] = useState(false);
   const [nameInput, setNameInput] = useState(user.displayName);
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -108,6 +110,18 @@ export default function Navbar() {
           {/* User Profile & Action Tools */}
           <div className="flex items-center gap-3">
             
+            {/* Active Match Return Pill Button */}
+            {activeBattle && !pathname.includes(activeBattle.roomCode) && (
+              <Link
+                href={`/battle/${activeBattle.roomCode}`}
+                className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-rose-500 via-orange-500 to-amber-500 hover:from-rose-600 hover:to-orange-600 text-white font-extrabold text-xs shadow-md shadow-rose-500/20 animate-pulse transition"
+                title="Quay lại trận đấu đang diễn ra"
+              >
+                <Swords className="w-3.5 h-3.5 text-white" />
+                <span className="hidden sm:inline">Quay lại trận</span>
+                <span className="font-mono bg-white/20 px-1.5 py-0.5 rounded text-[11px]">#{activeBattle.roomCode}</span>
+              </Link>
+            )}
             
             {/* Audio sound toggle */}
             <button

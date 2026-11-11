@@ -13,7 +13,8 @@ import { useUserIdentity } from "@/hooks/useUserIdentity";
 import { generateBattleQuestions } from "@/lib/ai/gemini";
 import { getDeckById, syncGoogleSheetDeck } from "@/lib/firebase/decks";
 import { FlashcardItem, VocabDeck } from "@/types/vocab";
-import { Loader2 } from "lucide-react";
+import { Loader2, LogOut } from "lucide-react";
+import { useActiveBattle } from "@/hooks/useActiveBattle";
 
 export default function BattleRoomPage({
   params,
@@ -24,11 +25,12 @@ export default function BattleRoomPage({
 
   const router = useRouter();
   const { user, isLoaded } = useUserIdentity();
+  const { saveActiveBattle, clearActiveBattle } = useActiveBattle();
 
   const [room, setRoom] = useState<BattleRoom | null>(null);
   const [isStarting, setIsStarting] = useState(false);
 
-  // Lắng nghe trạng thái phòng qua Firestore Realtime
+  // Lắng nghe trạng thái phòng qua Firebase Realtime Database
   useEffect(() => {
     if (!roomCode) return;
     const unsub = subscribeToRoom(roomCode, (updatedRoom) => {
@@ -36,6 +38,21 @@ export default function BattleRoomPage({
     });
     return () => unsub();
   }, [roomCode]);
+
+  // Tự động lưu hoặc dọn dẹp active session khi phòng thay đổi trạng thái
+  useEffect(() => {
+    if (!room) return;
+    if (room.status === 'finished') {
+      clearActiveBattle();
+    } else {
+      saveActiveBattle({
+        roomCode: room.roomCode,
+        deckTitle: room.settings.deckTitle,
+        status: room.status,
+        timestamp: Date.now(),
+      });
+    }
+  }, [room, saveActiveBattle, clearActiveBattle]);
 
   if (!isLoaded || !room) {
     return (

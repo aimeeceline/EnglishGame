@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { BattleRoom } from "@/types/battle";
 import { togglePlayerReady } from "@/lib/firebase/rooms";
 import { 
@@ -15,7 +16,8 @@ import {
   Hourglass, 
   Share2, 
   Loader2,
-  PenTool
+  PenTool,
+  LogOut
 } from "lucide-react";
 import QuickReactionToolbar from "./QuickReactionToolbar";
 
@@ -298,6 +300,17 @@ export default function RoomLobby({
           </p>
         )}
 
+      </div>
+
+      {/* Leave Lobby Option */}
+      <div className="w-full mt-6 text-center">
+        <Link
+          href="/"
+          className="text-xs text-slate-400 hover:text-slate-600 transition inline-flex items-center gap-1.5 py-1 px-3 rounded-lg hover:bg-slate-100"
+        >
+          <LogOut className="w-3.5 h-3.5" />
+          <span>Rời phòng về Trang Chủ (bạn có thể quay lại bất cứ lúc nào)</span>
+        </Link>
       </div>
 
     </div>

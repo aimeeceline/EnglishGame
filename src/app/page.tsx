@@ -23,7 +23,8 @@ import {
   Check,
   Table,
   Loader2,
-  Volume2
+  Volume2,
+  X
 } from "lucide-react";
 import Navbar from "@/components/common/Navbar";
 import CreateRoomModal from "@/components/battle/CreateRoomModal";
@@ -31,6 +32,7 @@ import JoinRoomModal from "@/components/battle/JoinRoomModal";
 import { getAllDecks } from "@/lib/firebase/decks";
 import { getActiveRoomStats, findWaitingRoom, createBattleRoom } from "@/lib/firebase/rooms";
 import { useUserIdentity } from "@/hooks/useUserIdentity";
+import { useActiveBattle } from "@/hooks/useActiveBattle";
 import { VocabDeck } from "@/types/vocab";
 
 interface BattleHistoryItem {
@@ -47,6 +49,7 @@ interface BattleHistoryItem {
 export default function HomePage() {
   const router = useRouter();
   const { user } = useUserIdentity();
+  const { activeBattle, clearActiveBattle } = useActiveBattle();
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isJoinOpen, setIsJoinOpen] = useState(false);
@@ -222,6 +225,46 @@ export default function HomePage() {
 
           </div>
         </section>
+
+        {/* ACTIVE BATTLE IN-PROGRESS BANNER */}
+        {activeBattle && (
+          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-3">
+            <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-600 text-white p-4 sm:p-5 rounded-3xl shadow-lg shadow-blue-500/15 flex flex-col sm:flex-row items-center justify-between gap-4 border border-blue-400/30 animate-in fade-in duration-300">
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center shrink-0 shadow-inner">
+                  <Swords className="w-6 h-6 text-white animate-bounce" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-extrabold text-base">Trận Đấu Của Bạn Đang Diễn Ra!</span>
+                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-400 text-slate-900 text-[10px] font-black uppercase tracking-wider animate-pulse shadow-xs">
+                      Live
+                    </span>
+                  </div>
+                  <p className="text-xs text-blue-100 mt-0.5">
+                    Phòng đấu <span className="font-mono font-bold bg-white/20 px-2 py-0.5 rounded text-white">#{activeBattle.roomCode}</span> ({activeBattle.deckTitle || "Đang đấu"}) vẫn đang chờ bạn so tài.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2.5 w-full sm:w-auto shrink-0">
+                <Link
+                  href={`/battle/${activeBattle.roomCode}`}
+                  className="flex-1 sm:flex-none px-6 py-3 rounded-2xl bg-white text-blue-700 hover:bg-blue-50 font-black text-sm shadow-md transition flex items-center justify-center gap-2 group cursor-pointer"
+                >
+                  <span>Quay Lại Trận Đấu</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </Link>
+                <button
+                  onClick={clearActiveBattle}
+                  className="px-3.5 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition"
+                  title="Bỏ qua trận này"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* HERO SECTION: MAIN ACTIONS 1V1 (Tạo Phòng / Vào PIN / Quick Matching) */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
