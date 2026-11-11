@@ -483,8 +483,11 @@ export async function findWaitingRoom(currentUserUid: string): Promise<string | 
     const snap = await get(roomsRef);
     if (snap.exists()) {
       const allRooms = snap.val() as Record<string, BattleRoom>;
+      const now = Date.now();
       for (const [code, r] of Object.entries(allRooms)) {
-        if (r && r.status === 'waiting' && r.host.uid !== currentUserUid && !r.guest) {
+        // Chỉ ghép vào phòng mới tạo trong vòng 15 phút gần nhất
+        const isRecent = !r.createdAt || now - r.createdAt < 15 * 60 * 1000;
+        if (r && isRecent && r.status === 'waiting' && r.host.uid !== currentUserUid && !r.guest) {
           return code;
         }
       }
