@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { BattleRoom } from "@/types/battle";
 import { submitPlayerAnswer, proceedToNextQuestion } from "@/lib/firebase/rooms";
 import { useSoundEffects } from "@/hooks/useSoundEffects";
-import { Crown, Swords, Zap, CheckCircle2, XCircle, Clock, Sparkles, PenTool, Send, HelpCircle, LogOut } from "lucide-react";
+import { Crown, Swords, Zap, CheckCircle2, XCircle, Clock, Sparkles, PenTool, Send, HelpCircle, LogOut, Volume2 } from "lucide-react";
 import QuickReactionToolbar from "./QuickReactionToolbar";
 
 interface BattleArenaProps {
@@ -33,6 +33,16 @@ export default function BattleArena({ room, currentUserUid }: BattleArenaProps) 
   const handleLeaveBattle = () => {
     if (confirm("Bạn có muốn tạm rời khỏi trận đấu? Trận đấu vẫn đang diễn ra và bạn có thể quay lại bất cứ lúc nào từ Trang chủ hoặc Thanh điều hướng.")) {
       router.push("/");
+    }
+  };
+
+  const speakWord = (text: string) => {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "en-US";
+      u.rate = 0.9;
+      window.speechSynthesis.speak(u);
     }
   };
 
@@ -303,15 +313,33 @@ export default function BattleArena({ room, currentUserUid }: BattleArenaProps) 
             Dạng bài: Gõ từ vựng tiếng Anh vào chỗ trống
           </div>
         ) : (
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold mb-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold mb-3">
             <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-            Từ vựng: <span className="font-mono text-slate-900 text-sm font-bold">{currentQ.targetWord}</span>
+            <span>Từ vựng: <strong className="font-mono text-slate-900 text-sm font-bold">{currentQ.targetWord}</strong></span>
+            <button
+              type="button"
+              onClick={() => speakWord(currentQ.targetWord)}
+              className="p-1 text-slate-500 hover:text-blue-600 rounded-lg hover:bg-blue-100/50 transition"
+              title="Nghe phát âm từ vựng"
+            >
+              <Volume2 className="w-3.5 h-3.5" />
+            </button>
           </div>
         )}
 
-        <h3 className="text-lg sm:text-2xl font-bold text-slate-900 leading-relaxed max-w-2xl mx-auto whitespace-pre-line">
-          {currentQ.prompt}
-        </h3>
+        <div className="flex items-center justify-center gap-2 max-w-2xl mx-auto">
+          <h3 className="text-lg sm:text-2xl font-bold text-slate-900 leading-relaxed whitespace-pre-line">
+            {currentQ.prompt}
+          </h3>
+          <button
+            type="button"
+            onClick={() => speakWord(currentQ.prompt.replace(/[_]{2,}/g, "blank"))}
+            className="p-1.5 text-slate-400 hover:text-blue-600 rounded-xl hover:bg-slate-100 transition shrink-0"
+            title="Đọc câu hỏi tiếng Anh"
+          >
+            <Volume2 className="w-4 h-4" />
+          </button>
+        </div>
 
         {/* Gợi ý cho câu hỏi (nếu có) */}
         {currentQ.hint && (

@@ -30,7 +30,7 @@ import Navbar from "@/components/common/Navbar";
 import CreateRoomModal from "@/components/battle/CreateRoomModal";
 import JoinRoomModal from "@/components/battle/JoinRoomModal";
 import { getAllDecks } from "@/lib/firebase/decks";
-import { getActiveRoomStats, findWaitingRoom, createBattleRoom } from "@/lib/firebase/rooms";
+import { findWaitingRoom, createBattleRoom } from "@/lib/firebase/rooms";
 import { useUserIdentity } from "@/hooks/useUserIdentity";
 import { useActiveBattle } from "@/hooks/useActiveBattle";
 import { VocabDeck } from "@/types/vocab";
@@ -63,7 +63,6 @@ export default function HomePage() {
     totalMatches: 0,
     winRate: 0,
     totalCards: 0,
-    onlineCount: 1,
   });
 
   // Demo Simulation Arena State
@@ -103,15 +102,6 @@ export default function HomePage() {
       setRealStats(prev => ({
         ...prev,
         totalCards: totalVocab,
-      }));
-    })();
-
-    // 3. Nạp số lượng phòng/người chơi thực tế đang online từ Firebase
-    (async () => {
-      const liveStats = await getActiveRoomStats();
-      setRealStats(prev => ({
-        ...prev,
-        onlineCount: liveStats.onlineCount,
       }));
     })();
   }, [user.uid]);
@@ -165,7 +155,7 @@ export default function HomePage() {
         
         {/* Top Stats Banner (Thống Kê Thực Tế 100%) */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             
             {/* Stat 1: Trận Đã Đấu */}
             <div className="bg-white/80 backdrop-blur border border-slate-200/80 p-4 rounded-2xl shadow-xs flex items-center gap-4">
@@ -205,20 +195,6 @@ export default function HomePage() {
                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Kho Từ Vựng</p>
                 <p className="text-xl font-extrabold text-slate-800">
                   {realStats.totalCards} từ
-                </p>
-              </div>
-            </div>
-
-            {/* Stat 4: Đang Online Realtime */}
-            <div className="bg-white/80 backdrop-blur border border-slate-200/80 p-4 rounded-2xl shadow-xs flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl shrink-0">
-                <Users className="w-6 h-6 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Đang Online</p>
-                <p className="text-xl font-extrabold text-slate-800 flex items-center gap-2">
-                  {realStats.onlineCount}
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-ping"></span>
                 </p>
               </div>
             </div>
